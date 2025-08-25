@@ -22,10 +22,14 @@
                             {{ __('Users') }}
                         </x-nav-link>
                     </div>
-                    <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
-                            {{ __('Products') }}
-                        </x-nav-link>
-                    </div>
+                </div>
+                <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                        {{ __('Products') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('levels.index')" :active="request()->routeIs('levels.*')">
+                        {{ __('Levels') }}
+                    </x-nav-link>
                 </div>
             </div>
 

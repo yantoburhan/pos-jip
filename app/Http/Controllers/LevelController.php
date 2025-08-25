@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Models\Level;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class ProductController extends Controller
+class LevelController extends Controller
 {
     // Properti untuk menyimpan pesan validasi kustom dalam Bahasa Indonesia
     public array $customMessages = [
@@ -18,8 +18,8 @@ class ProductController extends Controller
 
     // Properti untuk mengubah nama atribut default menjadi lebih ramah
     public array $customAttributes = [
-        'name' => 'Nama Produk',
-        'point' => 'Point',
+        'name' => 'Nama Level',
+        'level_point' => 'level_Point',
     ];
 
     /**
@@ -27,9 +27,9 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $this->authorize('viewAny', Product::class);
-        $products = Product::orderBy('id', 'asc')->paginate(10);
-        return view('products.index', compact('products'));
+        $this->authorize('viewAny', Level::class);
+        $levels = Level::orderBy('id', 'asc')->paginate(10);
+        return view('levels.index', compact('levels'));
     }
 
     /**
@@ -37,8 +37,8 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Product::class);
-        return view('products.create');
+        $this->authorize('create', Level::class);
+        return view('levels.create');
     }
 
     /**
@@ -46,64 +46,64 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Product::class);
+        $this->authorize('create', Level::class);
 
         // Validasi disesuaikan dengan kolom 'name' di database
         $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:products,name'],
-            'point' => ['required', 'integer'],
+            'name' => ['required', 'string', 'max:255', 'unique:levels,name'],
+            'level_point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 
         // Simpan data menggunakan 'name' agar cocok dengan $fillable dan database
-        Product::create([
+        Level::create([
             'name' => $request->name,
-            'point' => $request->point,
+            'level_point' => $request->level_point,
         ]);
 
-        return redirect()->route('products.index')
-                        ->with('success', 'Produk baru berhasil ditambahkan.');
+        return redirect()->route('levels.index')
+                        ->with('success', 'Level baru berhasil ditambahkan.');
     }
 
     /**
      * Menampilkan form untuk mengedit produk.
      */
-    public function edit(Product $product)
+    public function edit(Level $level)
     {
-        $this->authorize('update', $product);
-        return view('products.edit', compact('product'));
+        $this->authorize('update', $level);
+        return view('levels.edit', compact('level'));
     }
 
     /**
      * Memperbarui data produk di database.
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, Level $level)
     {
-        $this->authorize('update', $product);
+        $this->authorize('update', $level);
 
         // Validasi disesuaikan dengan kolom 'name' di database
         $validatedData = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($product->id)],
-            'point' => ['required', 'integer'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($level->id)],
+            'level_point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 
         // Update model menggunakan 'name' agar cocok dengan $fillable dan database
-        $product->update([
+        $level->update([
             'name' => $validatedData['name'],
-            'point' => $validatedData['point'],
+            'level_point' => $validatedData['level_point'],
         ]);
 
-        return redirect()->route('products.index')
-                        ->with('success', 'Data produk berhasil diperbarui.');
+        return redirect()->route('levels.index')
+                        ->with('success', 'Data level berhasil diperbarui.');
     }
 
     /**
      * Menghapus produk dari database.
      */
-    public function destroy(Product $product)
+    public function destroy(Level $level)
     {
-        $this->authorize('delete', $product);
-        $product->delete();
-        return redirect()->route('products.index')
-                        ->with('success', 'Produk berhasil dihapus.');
+        $this->authorize('delete', $level);
+        $level->delete();
+        return redirect()->route('levels.index')
+                        ->with('success', 'Level berhasil dihapus.');
     }
 }
