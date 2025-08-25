@@ -10,7 +10,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
 
-                     {{-- Menampilkan Error Validasi --}}
+                    {{-- Menampilkan Error Validasi --}}
                     @if ($errors->any())
                         <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
                             <ul class="list-disc list-inside">

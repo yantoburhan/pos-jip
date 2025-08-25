@@ -81,7 +81,7 @@ class UserController extends Controller
         ]);
 
         return redirect()->route('users.index')
-                         ->with('success', 'User baru berhasil ditambahkan.');
+                        ->with('success', 'User baru berhasil ditambahkan.');
     }
 
     /**
@@ -132,7 +132,7 @@ class UserController extends Controller
 
     // 7. Redirect dengan pesan sukses
     return redirect()->route('users.index')
-                     ->with('success', 'Data user berhasil diperbarui.');
+                    ->with('success', 'Data user berhasil diperbarui.');
 }
 
     /**
@@ -144,12 +144,12 @@ class UserController extends Controller
 
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')
-                             ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+                            ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
         $user->delete();
 
         return redirect()->route('users.index')
-                         ->with('success', 'User berhasil dihapus.');
+                        ->with('success', 'User berhasil dihapus.');
     }
 }
