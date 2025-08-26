@@ -31,5 +31,7 @@ class AppServiceProvider extends ServiceProvider
     protected $policies = [
         User::class => UserPolicy::class, // <-- TAMBAHKAN BARIS INI
         Product::class => ProductPolicy::class,
+        Level::class => LevelPolicy::class,
+        Customer::class => CustomerPolicy::class,
     ];
 }

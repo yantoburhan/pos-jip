@@ -31,6 +31,10 @@
                         {{ __('Levels') }}
                     </x-nav-link>
                 </div>
+                <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
+                        {{ __('Customers') }}
+                    </x-nav-link>
+                </div>
             </div>
 
             <!-- Settings Dropdown -->
