@@ -13,8 +13,8 @@ class LevelPolicy
      */
     public function viewAny(User $user): bool
     {
-        // Izinkan semua user yang sudah login untuk melihat halaman index produk
-        return true;
+        // hanya admin
+        return $user->roles == 1;
     }
 
     /**
@@ -50,6 +50,11 @@ class LevelPolicy
     public function delete(User $user, Level $level): bool
     {
         // Hanya admin yang boleh menghapus produk
+        return $user->roles == 1;
+    }
+
+    public function viewOpsi(User $user): bool
+    {
         return $user->roles == 1;
     }
 }

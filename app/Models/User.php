@@ -48,4 +48,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getRoleNameAttribute()
+    {
+        $roles = config('roles');
+        return $roles[$this->roles] ?? 'Kasir';
+    }
 }

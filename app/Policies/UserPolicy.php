@@ -12,7 +12,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true; // Semua orang boleh melihat daftar user
+        return $user->roles == 1; // Hanya Admin
     }
 
     /**

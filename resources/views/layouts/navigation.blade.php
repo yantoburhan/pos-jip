@@ -16,22 +16,29 @@
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
-                        </div>
-
-                    <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                    </div>
+                    @can('viewOpsi', App\Models\User::class)
+                    <div class="hidden sm:flex sm:items-center ml-auto">
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                             {{ __('Users') }}
                         </x-nav-link>
                     </div>
+                    @endcan
                 </div>
-                <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                <div class="hidden sm:flex sm:items-center ml-auto">
+                    <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
                         {{ __('Products') }}
                     </x-nav-link>
                 </div>
-                <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('levels.index')" :active="request()->routeIs('levels.*')">
+                @can('viewOpsi', App\Models\Level::class)
+                <div class="hidden sm:flex sm:items-center ml-auto">
+                    <x-nav-link :href="route('levels.index')" :active="request()->routeIs('levels.*')">
                         {{ __('Levels') }}
                     </x-nav-link>
                 </div>
-                <div class="hidden sm:flex sm:items-center ml-auto"> <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
+                @endcan
+                <div class="hidden sm:flex sm:items-center ml-auto">
+                    <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
                         {{ __('Customers') }}
                     </x-nav-link>
                 </div>

@@ -1,7 +1,7 @@
 <x-app-layout>
     {{-- Bagian Header Halaman --}}
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Manajemen User') }}
         </h2>
     </x-slot>
@@ -41,7 +41,7 @@
                             @forelse ($users as $i => $user)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $loop->iteration }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->roles == 1 ? 'Admin' : 'Kasir' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->role_name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $user->name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $user->username }}</td> {{-- DATA USERNAME --}}
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
