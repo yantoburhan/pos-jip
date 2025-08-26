@@ -4,57 +4,42 @@ namespace App\Policies;
 
 use App\Models\Level;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class LevelPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    /** Boleh lihat daftar level */
     public function viewAny(User $user): bool
     {
-        // hanya admin
-        return $user->roles == 1;
+        return $user->hasFeature('view_levels');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
+    /** Boleh lihat detail level */
     public function view(User $user, Level $level): bool
     {
-        // Izinkan semua user melihat detail produk
-        return true;
+        return $user->hasFeature('view_levels');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+    /** Boleh membuat level baru */
     public function create(User $user): bool
     {
-        // Hanya admin yang boleh membuat produk baru
-        return $user->roles == 1;
+        return $user->hasFeature('create_levels');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
+    /** Boleh mengupdate level */
     public function update(User $user, Level $level): bool
     {
-        // Hanya admin yang boleh mengedit produk
-        return $user->roles == 1;
+        return $user->hasFeature('update_levels');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
+    /** Boleh menghapus level */
     public function delete(User $user, Level $level): bool
     {
-        // Hanya admin yang boleh menghapus produk
-        return $user->roles == 1;
+        return $user->hasFeature('delete_levels');
     }
 
+    /** Boleh melihat opsi tambahan (misalnya setting khusus level) */
     public function viewOpsi(User $user): bool
     {
-        return $user->roles == 1;
+        return $user->hasFeature('manage_levels');
     }
 }

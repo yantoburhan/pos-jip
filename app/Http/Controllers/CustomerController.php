@@ -9,85 +9,142 @@ use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
-    public function index()
+    /**
+     * Custom messages untuk validasi
+     */
+    public array $customMessages = [
+        '*.required' => ':Attribute tidak boleh kosong.',
+        '*.max' => ':Attribute maksimal :max karakter.',
+        '*.unique' => ':Attribute sudah terdaftar.',
+        '*.integer' => ':Attribute harus berupa angka.',
+        '*.exists' => ':Attribute tidak valid.',
+        '*.min' => ':Attribute minimal :min.',
+    ];
+
+    /**
+     * Custom attribute names agar lebih ramah
+     */
+    public array $customAttributes = [
+        'no_hp_cust'   => 'No HP',
+        'cust_name'    => 'Nama Customer',
+        'level_id'     => 'Level',
+        'total_spent'  => 'Total Belanja',
+    ];
+
+    /**
+     * Tampilkan daftar customer
+     */
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Customer::class);
-        $customers = Customer::with('level')->orderBy('cust_name', 'asc')->paginate(10);
+
+        $query = Customer::with('level')->orderBy('cust_name', 'asc');
+
+        // fitur pencarian (opsional)
+        if ($request->filled('q')) {
+            $query->where('cust_name', 'like', '%'.$request->q.'%')
+                  ->orWhere('no_hp_cust', 'like', '%'.$request->q.'%');
+        }
+
+        $customers = $query->paginate(10);
+
         return view('customers.index', compact('customers'));
     }
 
+    /**
+     * Form tambah customer
+     */
     public function create()
     {
         $this->authorize('create', Customer::class);
-        $levels = Level::all(); // Ambil semua level untuk dropdown
+
+        $levels = Level::all();
         return view('customers.create', compact('levels'));
     }
 
+    /**
+     * Simpan customer baru
+     */
     public function store(Request $request)
     {
         $this->authorize('create', Customer::class);
 
-        // 1. TAMBAHKAN 'total_spent' ke dalam aturan validasi
         $validatedData = $request->validate([
-            'no_hp_cust' => ['required', 'string', 'max:15', 'unique:customers,no_hp_cust'],
-            'cust_name' => ['required', 'string', 'max:255'],
-            'level_id' => ['required', 'exists:levels,id'],
-            'total_spent' => ['required', 'integer', 'min:0'], // <-- Baris ini penting
-        ]);
+            'no_hp_cust'   => ['required', 'string', 'max:15', 'unique:customers,no_hp_cust'],
+            'cust_name'    => ['required', 'string', 'max:255'],
+            'level_id'     => ['required', 'exists:levels,id'],
+            'total_spent'  => ['required', 'integer', 'min:0'],
+        ], $this->customMessages, $this->customAttributes);
 
-        // 2. Cari level yang dipilih
-        $level = Level::find($validatedData['level_id']);
+        // ambil data level
+        $level = Level::findOrFail($validatedData['level_id']);
 
-        // 3. Simpan customer baru dengan data dari form
         Customer::create([
-            'no_hp_cust' => $validatedData['no_hp_cust'],
-            'cust_name' => $validatedData['cust_name'],
-            'level_id' => $validatedData['level_id'],
-            'cust_point' => $level->level_point,
-            'total_spent' => $validatedData['total_spent'], // <-- Ambil dari form, BUKAN 0 lagi
+            'no_hp_cust'  => $validatedData['no_hp_cust'],
+            'cust_name'   => $validatedData['cust_name'],
+            'level_id'    => $validatedData['level_id'],
+            'cust_point'  => $level->level_point ?? 0, // default aman
+            'total_spent' => $validatedData['total_spent'],
         ]);
 
-        return redirect()->route('customers.index')->with('success', 'Customer baru berhasil ditambahkan.');
+        return redirect()->route('customers.index')
+                         ->with('success', 'Customer baru berhasil ditambahkan.');
     }
 
+    /**
+     * Form edit customer
+     */
     public function edit(Customer $customer)
     {
         $this->authorize('update', $customer);
-        $levels = Level::all(); // Ambil semua level untuk dropdown
+
+        $levels = Level::all();
         return view('customers.edit', compact('customer', 'levels'));
     }
 
+    /**
+     * Update customer
+     */
     public function update(Request $request, Customer $customer)
     {
         $this->authorize('update', $customer);
 
-        // 1. Validasi data dari form seperti biasa
         $validatedData = $request->validate([
-            'no_hp_cust' => ['required', 'string', 'max:15', Rule::unique('customers', 'no_hp_cust')->ignore($customer->no_hp_cust, 'no_hp_cust')],
-            'cust_name' => ['required', 'string', 'max:255'],
-            'level_id' => ['required', 'exists:levels,id'],
-            'total_spent' => ['required', 'integer', 'min:0'],
-        ]);
+            'no_hp_cust'   => [
+                'required',
+                'string',
+                'max:15',
+                Rule::unique('customers', 'no_hp_cust')->ignore($customer->id),
+            ],
+            'cust_name'    => ['required', 'string', 'max:255'],
+            'level_id'     => ['required', 'exists:levels,id'],
+            'total_spent'  => ['required', 'integer', 'min:0'],
+        ], $this->customMessages, $this->customAttributes);
 
-        // 2. Cari level BARU yang dipilih di database
-        $newLevel = Level::find($validatedData['level_id']);
+        $newLevel = Level::findOrFail($validatedData['level_id']);
 
-        // 3. Perbarui customer dengan data dari form DAN poin dari level baru
         $customer->update([
-            'no_hp_cust' => $validatedData['no_hp_cust'],
-            'cust_name' => $validatedData['cust_name'],
-            'level_id' => $validatedData['level_id'],
+            'no_hp_cust'  => $validatedData['no_hp_cust'],
+            'cust_name'   => $validatedData['cust_name'],
+            'level_id'    => $validatedData['level_id'],
             'total_spent' => $validatedData['total_spent'],
-            'cust_point' => $newLevel->level_point, // <-- Poin diperbarui dari level yang baru
+            'cust_point'  => $newLevel->level_point ?? 0,
         ]);
 
-        return redirect()->route('customers.index')->with('success', 'Data customer berhasil diperbarui.');
+        return redirect()->route('customers.index')
+                         ->with('success', 'Data customer berhasil diperbarui.');
     }
 
+    /**
+     * Hapus customer
+     */
     public function destroy(Customer $customer)
     {
         $this->authorize('delete', $customer);
+
         $customer->delete();
-        return redirect()->route('customers.index')->with('success', 'Customer berhasil dihapus.');
+
+        return redirect()->route('customers.index')
+                         ->with('success', 'Customer berhasil dihapus.');
     }
 }

@@ -1,9 +1,22 @@
 <x-app-layout>
     {{-- Bagian Header Halaman --}}
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Manajemen Product') }}
-        </h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                {{ __('Manajemen Product') }}
+            </h2>
+
+            {{-- Tombol Pending --}}
+            <a href="{{ route('products.pending.index') }}" 
+               class="relative inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-opacity-50">
+                Pending
+                @if($pendingCount > 0)
+                    <span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                        {{ $pendingCount }}
+                    </span>
+                @endif
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-12">
@@ -21,7 +34,6 @@
             <x-message />
 
             {{-- Tabel Daftar Product --}}
-
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -29,6 +41,7 @@
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Point</th>
                                 @can('viewOpsi', App\Models\Product::class)
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opsi</th> {{-- KOLOM OPSI --}}
@@ -40,6 +53,7 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $loop->iteration }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $product->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $product->point }}</td>
                                     @can('update', $product)
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role; // Tambah ini
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
@@ -11,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    // Properti untuk menyimpan pesan validasi kustom dalam Bahasa Indonesia
+    // Pesan validasi kustom (bahasa Indonesia)
     public array $customMessages = [
         '*.required' => ':Attribute tidak boleh kosong.',
         '*.max' => ':Attribute maksimal :max karakter.',
@@ -21,7 +22,7 @@ class UserController extends Controller
         'password.confirmed' => 'Konfirmasi password tidak cocok.',
     ];
 
-    // Properti untuk mengubah nama atribut default menjadi lebih ramah
+    // Nama atribut agar lebih ramah di pesan error
     public array $customAttributes = [
         'name' => 'Nama Lengkap',
         'email' => 'Alamat Email',
@@ -31,14 +32,13 @@ class UserController extends Controller
     ];
 
     /**
-     * Menampilkan daftar semua user.
+     * 🔹 Menampilkan daftar semua user.
      */
     public function index()
     {
         $this->authorize('viewAny', User::class);
 
         if (auth()->user()->roles == 1) {
-            // Diperbarui: Mengurutkan dari ID terkecil (tertua)
             $users = User::orderBy('id', 'asc')->paginate(10);
         } else {
             $users = User::where('id', auth()->id())->paginate(10);
@@ -48,28 +48,31 @@ class UserController extends Controller
     }
 
     /**
-     * Menampilkan form untuk membuat user baru.
+     * 🔹 Form create user baru.
      */
     public function create()
     {
         $this->authorize('create', User::class);
-        return view('users.create');
+
+        // Ambil semua role dari database
+        $roles = Role::orderBy('id')->pluck('name', 'id');
+
+        return view('users.create', compact('roles'));
     }
 
     /**
-     * Menyimpan user baru ke database.
+     * 🔹 Store user baru.
      */
     public function store(Request $request)
     {
         $this->authorize('create', User::class);
 
-        // Panggil validasi dengan pesan dan atribut kustom
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'roles' => ['required', 'integer', Rule::in([0, 1])],
+            'roles' => ['required', 'integer', 'exists:roles,id'], // Validasi role id
         ], $this->customMessages, $this->customAttributes);
 
         User::create([
@@ -85,58 +88,54 @@ class UserController extends Controller
     }
 
     /**
-     * Menampilkan form untuk mengedit user.
+     * 🔹 Form edit user.
      */
     public function edit(User $user)
     {
         $this->authorize('update', $user);
-        return view('users.edit', compact('user'));
+
+        // Ambil role dari DB
+        $roles = Role::orderBy('id')->pluck('name', 'id');
+
+        return view('users.edit', compact('user', 'roles'));
     }
 
     /**
-     * Memperbarui data user di database.
+     * 🔹 Update user.
      */
     public function update(Request $request, User $user)
-{
-    $this->authorize('update', $user);
+    {
+        $this->authorize('update', $user);
 
-    // 1. Validasi semua input
-    $validatedData = $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-        'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-        'roles' => ['required', 'integer', Rule::in([0, 1])],
-        'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-    ], $this->customMessages, $this->customAttributes);
+        $validatedData = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'roles' => ['required', 'integer', 'exists:roles,id'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ], $this->customMessages, $this->customAttributes);
 
-    // 2. Pisahkan data password dari data lain
-    $userData = Arr::except($validatedData, ['password']);
+        $userData = Arr::except($validatedData, ['password']);
+        $user->fill($userData);
 
-    // 3. Isi model HANYA dengan data non-password untuk pengecekan
-    $user->fill($userData);
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
 
-    // 4. Jika ada password baru di request, tambahkan ke model
-    if ($request->filled('password')) {
-        $user->password = Hash::make($request->password);
+        if (!$user->isDirty()) {
+            throw ValidationException::withMessages([
+                'name' => 'Tidak ada perubahan data, tidak perlu menyimpan.',
+            ]);
+        }
+
+        $user->save();
+
+        return redirect()->route('users.index')
+                        ->with('success', 'Data user berhasil diperbarui.');
     }
-
-    // 5. Sekarang, cek apakah ada perubahan
-    if (!$user->isDirty()) {
-        throw ValidationException::withMessages([
-            'name' => 'Tidak ada perubahan data, tidak perlu menyimpan.',
-        ]);
-    }
-
-    // 6. Jika ada perubahan, simpan data
-    $user->save();
-
-    // 7. Redirect dengan pesan sukses
-    return redirect()->route('users.index')
-                    ->with('success', 'Data user berhasil diperbarui.');
-}
 
     /**
-     * Menghapus user dari database.
+     * 🔹 Hapus user.
      */
     public function destroy(User $user)
     {

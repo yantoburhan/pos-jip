@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -23,7 +22,7 @@ class User extends Authenticatable
         'username',
         'password',
         'photo_path',
-        'roles',
+        'roles', // foreign key ke tabel roles.id
     ];
 
     /**
@@ -49,9 +48,29 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Relasi ke Role
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'roles'); 
+        // kolom di users = roles (integer id role)
+    }
+
+    /**
+     * Akses nama role (misalnya Admin, Kasir, dll.)
+     */
     public function getRoleNameAttribute()
     {
-        $roles = config('roles');
-        return $roles[$this->roles] ?? 'Kasir';
+        return $this->role?->name ?? 'Unknown';
+    }
+
+    /**
+     * Cek apakah user punya akses fitur tertentu
+     */
+    public function hasFeature(string $feature): bool
+    {
+        return $this->role 
+            && $this->role->features->contains('name', $feature);
     }
 }

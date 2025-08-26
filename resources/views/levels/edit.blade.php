@@ -26,12 +26,12 @@
                         @method('PUT')
 
                         <div>
-                            <label for="name" class="block font-medium text-sm text-gray-700">Nama</label>
+                            <label for="name" class="block font-medium text-sm text-gray-700">Nama Level</label>
                             <input id="name" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="text" name="name" value="{{ old('name', $level->name) }}" required autofocus />
                         </div>
 
                         <div class="mt-4">
-                            <label for="level_point" class="block font-medium text-sm text-gray-700">Level Point</label>
+                            <label for="level_point" class="block font-medium text-sm text-gray-700">Point</label>
                             <input id="level_point" min="0" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="number" name="level_point" value="{{ old('level_point', $level->level_point) }}" />
                         </div>
 

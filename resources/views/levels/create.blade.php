@@ -25,7 +25,7 @@
                         @csrf
 
                         <div>
-                            <label for="name" class="block font-medium text-sm text-gray-700">Level Point</label>
+                            <label for="name" class="block font-medium text-sm text-gray-700">Nama Level</label>
                             <input id="name" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="text" name="name" value="{{ old('name') }}" required autofocus />
                         </div>
 

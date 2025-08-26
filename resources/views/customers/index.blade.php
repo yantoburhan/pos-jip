@@ -26,7 +26,10 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Point</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Belanja</th> <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Opsi</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Belanja</th>
+                                @can('viewOpsi', App\Models\Customer::class)
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Opsi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -36,7 +39,8 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $customer->cust_name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $customer->level->name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $customer->cust_point }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($customer->total_spent, 0, ',', '.') }}</td> <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($customer->total_spent, 0, ',', '.') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         @can('update', $customer)
                                             <a href="{{ route('customers.edit', $customer->no_hp_cust) }}" class="inline-block px-3 py-1 bg-yellow-500 text-white rounded-md text-xs font-semibold hover:bg-yellow-600">Ubah</a>
                                         @endcan

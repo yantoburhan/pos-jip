@@ -8,7 +8,9 @@ use Illuminate\Validation\Rule;
 
 class LevelController extends Controller
 {
-    // Properti untuk menyimpan pesan validasi kustom dalam Bahasa Indonesia
+    // =========================
+    // Pesan validasi kustom (Bahasa Indonesia)
+    // =========================
     public array $customMessages = [
         '*.required' => ':Attribute tidak boleh kosong.',
         '*.max' => ':Attribute maksimal :max karakter.',
@@ -16,45 +18,50 @@ class LevelController extends Controller
         '*.integer' => ':Attribute harus berupa angka.',
     ];
 
-    // Properti untuk mengubah nama atribut default menjadi lebih ramah
+    // =========================
+    // Nama atribut ramah pengguna
+    // =========================
     public array $customAttributes = [
         'name' => 'Nama Level',
-        'level_point' => 'level_Point',
+        'level_point' => 'Point Level',
     ];
 
     /**
-     * Menampilkan daftar semua produk.
+     * Menampilkan daftar semua level.
      */
     public function index()
     {
         $this->authorize('viewAny', Level::class);
+
         $levels = Level::orderBy('id', 'asc')->paginate(10);
+
         return view('levels.index', compact('levels'));
     }
 
     /**
-     * Menampilkan form untuk membuat produk baru.
+     * Menampilkan form untuk membuat level baru.
      */
     public function create()
     {
         $this->authorize('create', Level::class);
+
         return view('levels.create');
     }
 
     /**
-     * Menyimpan produk baru ke database.
+     * Menyimpan level baru ke database.
      */
     public function store(Request $request)
     {
         $this->authorize('create', Level::class);
 
-        // Validasi disesuaikan dengan kolom 'name' di database
+        // Validasi data
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:levels,name'],
             'level_point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 
-        // Simpan data menggunakan 'name' agar cocok dengan $fillable dan database
+        // Simpan ke database
         Level::create([
             'name' => $request->name,
             'level_point' => $request->level_point,
@@ -65,28 +72,34 @@ class LevelController extends Controller
     }
 
     /**
-     * Menampilkan form untuk mengedit produk.
+     * Menampilkan form untuk mengedit level.
      */
     public function edit(Level $level)
     {
         $this->authorize('update', $level);
+
         return view('levels.edit', compact('level'));
     }
 
     /**
-     * Memperbarui data produk di database.
+     * Memperbarui data level di database.
      */
     public function update(Request $request, Level $level)
     {
         $this->authorize('update', $level);
 
-        // Validasi disesuaikan dengan kolom 'name' di database
+        // ✅ Perbaikan: validasi unique harus ke tabel "levels", bukan "products"
         $validatedData = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($level->id)],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('levels', 'name')->ignore($level->id)
+            ],
             'level_point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 
-        // Update model menggunakan 'name' agar cocok dengan $fillable dan database
+        // Update ke database
         $level->update([
             'name' => $validatedData['name'],
             'level_point' => $validatedData['level_point'],
@@ -97,12 +110,14 @@ class LevelController extends Controller
     }
 
     /**
-     * Menghapus produk dari database.
+     * Menghapus level dari database.
      */
     public function destroy(Level $level)
     {
         $this->authorize('delete', $level);
+
         $level->delete();
+
         return redirect()->route('levels.index')
                         ->with('success', 'Level berhasil dihapus.');
     }

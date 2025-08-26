@@ -3,72 +3,73 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Menentukan apakah user boleh melihat daftar semua user
      */
     public function viewAny(User $user): bool
     {
-        return $user->roles == 1; // Hanya Admin
+        return $user->hasFeature('manage_users');
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Menentukan apakah user boleh melihat detail user tertentu
+     * Bisa juga akses diri sendiri walau tidak punya fitur
      */
     public function view(User $user, User $model): bool
     {
-        return true; // Semua user bisa melihat data user, termasuk dirinya sendiri
+        return $user->hasFeature('view_users') || $user->id === $model->id;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Menentukan apakah user boleh membuat user baru
      */
     public function create(User $user): bool
     {
-        return $user->roles == 1; // hanya admin yang bisa membuat user baru
+        return $user->hasFeature('create_users');
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Menentukan apakah user boleh mengupdate user tertentu
      */
     public function update(User $user, User $model): bool
     {
-        return $user->roles == 1; // hanya admin yang bisa mengupdate user
+        return $user->hasFeature('update_users');
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Menentukan apakah user boleh menghapus user tertentu
+     * Tidak boleh menghapus dirinya sendiri
      */
     public function delete(User $user, User $model): bool
     {
-        return $user->id !== $model->id && $user->roles == 1; // hanya admin yang bisa menghapus user, kecuali dirinya sendiri
+        return $user->id !== $model->id && $user->hasFeature('delete_users');
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Menentukan apakah user boleh restore user yang dihapus
      */
     public function restore(User $user, User $model): bool
     {
-        return $user->roles == 1; // hanya admin yang bisa mengembalikan user yang dihapus
+        return $user->hasFeature('restore_users');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Menentukan apakah user boleh force delete user (hapus permanen)
      */
     public function forceDelete(User $user, User $model): bool
     {
-        return $user->roles == 1; // hanya admin yang bisa menghapus permanen user
+        return $user->hasFeature('force_delete_users');
     }
 
     /**
-     * Aturan untuk siapa yang bisa melihat kolom Opsi.
-     * Tetap hanya Admin.
+     * Menentukan apakah user boleh melihat opsi tambahan user
+     * (misalnya tombol setting di UI)
      */
     public function viewOpsi(User $user): bool
     {
-        return $user->roles == 1;
+        return $user->hasFeature('manage_users');
     }
 }

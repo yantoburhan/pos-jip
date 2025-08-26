@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductPendingController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
@@ -24,9 +25,13 @@ Route::middleware('auth')->group(function () {
     // route lengkap dari laravel yang menggunakan resource
     // untuk melihat method-nya dengan menggunakan perintah di terminal php artisan route:list
     Route::resource('users', UserController::class);
-    Route::resource('products', ProductController::class);
     Route::resource('levels', LevelController::class);
     Route::resource('customers', CustomerController::class);
+
+    // ini ditaruh sebelum Route::resource('products', ...)
+    Route::get('products/pending', [ProductPendingController::class, 'index'])
+        ->name('products.pending.index');
+    Route::resource('products', ProductController::class);
 });
 
 require __DIR__.'/auth.php';

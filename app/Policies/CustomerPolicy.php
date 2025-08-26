@@ -4,52 +4,41 @@ namespace App\Policies;
 
 use App\Models\Customer;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class CustomerPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    /** Boleh lihat daftar customer */
     public function viewAny(User $user): bool
     {
-        // Semua user yang sudah login boleh melihat daftar customer
-        return true;
+        return $user->hasFeature('view_customers');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
+    /** Boleh lihat detail customer */
     public function view(User $user, Customer $customer): bool
     {
-        // Semua user yang sudah login boleh melihat detail customer
-        return true;
+        return $user->hasFeature('view_customers');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+    /** Boleh membuat customer baru */
     public function create(User $user): bool
     {
-        // Hanya Admin (roles == 1) yang bisa membuat customer baru
-        return $user->roles == 1;
+        return $user->hasFeature('create_customers');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
+    /** Boleh update data customer */
     public function update(User $user, Customer $customer): bool
     {
-        // Hanya Admin (roles == 1) yang bisa mengedit customer
-        return $user->roles == 1;
+        return $user->hasFeature('update_customers');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
+    /** Boleh hapus customer */
     public function delete(User $user, Customer $customer): bool
     {
-        // Hanya Admin (roles == 1) yang bisa menghapus customer
-        return $user->roles == 1;
+        return $user->hasFeature('delete_customers');
+    }
+
+    public function viewOpsi(User $user): bool
+    {
+        return $user->hasFeature('update_customers') || $user->hasFeature('update_customers');
     }
 }

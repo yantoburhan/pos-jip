@@ -43,8 +43,11 @@
                         <div class="mt-4">
                             <label for="roles" class="block font-medium text-sm text-gray-700">Role</label>
                             <select name="roles" id="roles" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                <option value="1" {{ old('roles', $user->roles) == 1 ? 'selected' : '' }}>Admin</option>
-                                <option value="0" {{ old('roles', $user->roles) == 0 ? 'selected' : '' }}>Operator</option>
+                                @foreach ($roles as $key => $label)
+                                    <option value="{{ $key }}" {{ old('roles', $user->roles) == $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
 
