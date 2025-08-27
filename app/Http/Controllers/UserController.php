@@ -36,13 +36,13 @@ class UserController extends Controller
      */
     public function index()
     {
+        // Otorisasi menggunakan UserPolicy. Ini sudah benar.
         $this->authorize('viewAny', User::class);
 
-        if (auth()->user()->roles == 1) {
-            $users = User::orderBy('id', 'asc')->paginate(10);
-        } else {
-            $users = User::where('id', auth()->id())->paginate(10);
-        }
+        // HAPUS logika if/else yang lama.
+        // Jika user lolos otorisasi, berarti dia berhak melihat semua user.
+        // Gunakan with('role') untuk efisiensi (menghindari N+1 query).
+        $users = User::with('role')->orderBy('id', 'asc')->paginate(10);
 
         return view('users.index', compact('users'));
     }

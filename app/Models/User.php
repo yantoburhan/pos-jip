@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -51,7 +52,7 @@ class User extends Authenticatable
     /**
      * Relasi ke Role
      */
-    public function role()
+    public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class, 'roles'); 
         // kolom di users = roles (integer id role)
@@ -60,7 +61,7 @@ class User extends Authenticatable
     /**
      * Akses nama role (misalnya Admin, Kasir, dll.)
      */
-    public function getRoleNameAttribute()
+    public function getRoleNameAttribute(): string
     {
         return $this->role?->name ?? 'Unknown';
     }
@@ -70,7 +71,7 @@ class User extends Authenticatable
      */
     public function hasFeature(string $feature): bool
     {
-        return $this->role 
-            && $this->role->features->contains('name', $feature);
+        // This is more efficient as it checks the loaded collection
+        return $this->role && $this->role->features->contains('name', $feature);
     }
 }

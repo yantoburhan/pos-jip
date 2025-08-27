@@ -35,8 +35,13 @@ class RoleController extends Controller
             'features.*' => ['exists:features,id'],
         ]);
 
-        $role = Role::create($validated);
-        $role->features()->attach($request->features);
+        // 1. Buat role HANYA dengan namanya
+        $role = Role::create(['name' => $validated['name']]);
+
+        // 2. Lampirkan (attach) features HANYA jika ada di dalam data yang divalidasi
+        if (!empty($validated['features'])) {
+            $role->features()->attach($validated['features']);
+        }
 
         return redirect()->route('roles.index')->with('success', 'Role baru berhasil dibuat.');
     }
@@ -58,8 +63,12 @@ class RoleController extends Controller
             'features.*' => ['exists:features,id'],
         ]);
 
-        $role->update($validated);
-        $role->features()->sync($request->features ?? []);
+        // 1. Update nama role
+        $role->update(['name' => $validated['name']]);
+
+        // 2. Sinkronkan (sync) features. 
+        // Sync akan otomatis menambah/menghapus relasi sesuai data baru.
+        $role->features()->sync($validated['features'] ?? []);
 
         return redirect()->route('roles.index')->with('success', 'Role berhasil diperbarui.');
     }
