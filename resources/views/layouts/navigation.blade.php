@@ -11,36 +11,40 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden sm:flex sm:items-center sm:ml-10 w-full">
-                    <div class="hidden space-x-8 sm:-my-px sm:flex">
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                            {{ __('Dashboard') }}
-                        </x-nav-link>
-                    </div>
-                    @can('viewOpsi', App\Models\User::class)
-                    <div class="hidden sm:flex sm:items-center ml-auto">
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                        {{ __('Dashboard') }}
+                    </x-nav-link>
+
+                    @can('viewAny', App\Models\User::class)
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                             {{ __('Users') }}
                         </x-nav-link>
-                    </div>
                     @endcan
-                </div>
-                <div class="hidden sm:flex sm:items-center ml-auto">
-                    <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
-                        {{ __('Products') }}
-                    </x-nav-link>
-                </div>
-                @can('viewOpsi', App\Models\Level::class)
-                <div class="hidden sm:flex sm:items-center ml-auto">
-                    <x-nav-link :href="route('levels.index')" :active="request()->routeIs('levels.*')">
-                        {{ __('Levels') }}
-                    </x-nav-link>
-                </div>
-                @endcan
-                <div class="hidden sm:flex sm:items-center ml-auto">
-                    <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
-                        {{ __('Customers') }}
-                    </x-nav-link>
+
+                    @can('viewAny', App\Models\Product::class)
+                        <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                            {{ __('Products') }}
+                        </x-nav-link>
+                    @endcan
+                    
+                    @can('viewAny', App\Models\Level::class)
+                        <x-nav-link :href="route('levels.index')" :active="request()->routeIs('levels.*')">
+                            {{ __('Levels') }}
+                        </x-nav-link>
+                    @endcan
+
+                    @can('viewAny', App\Models\Customer::class)
+                        <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
+                            {{ __('Customers') }}
+                        </x-nav-link>
+                    @endcan
+
+                    @can('viewAny', App\Models\Role::class)
+                        <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
+                            {{ __('Roles') }}
+                        </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
@@ -67,7 +71,6 @@
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();">
@@ -96,6 +99,36 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @can('viewAny', App\Models\User::class)
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                    {{ __('Users') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Models\Product::class)
+                <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
+                    {{ __('Products') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Models\Level::class)
+                <x-responsive-nav-link :href="route('levels.index')" :active="request()->routeIs('levels.*')">
+                    {{ __('Levels') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @can('viewAny', App\Models\Customer::class)
+                <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
+                    {{ __('Customers') }}
+                </x-responsive-nav-link>
+            @endcan
+            
+            @can('viewAny', App\Models\Role::class)
+                <x-responsive-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
+                    {{ __('Roles') }}
+                </x-responsive-nav-link>
+            @endcan
         </div>
 
         <!-- Responsive Settings Options -->
@@ -113,7 +146,6 @@
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();">

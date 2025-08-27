@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id(); // Kolom id (primary, auto-increment)
             $table->string('name'); // Kolom nama product
             $table->decimal('price', 12, 2);
-            $table->integer('point'); // Kolom point
+            $table->decimal('point', 12, 1); // Kolom point
             $table->timestamps(); // Kolom created_at dan updated_at
         });
     }

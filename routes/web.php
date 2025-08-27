@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductPendingController;
 use App\Http\Controllers\LevelController;
@@ -25,12 +26,19 @@ Route::middleware('auth')->group(function () {
     // route lengkap dari laravel yang menggunakan resource
     // untuk melihat method-nya dengan menggunakan perintah di terminal php artisan route:list
     Route::resource('users', UserController::class);
+    Route::resource('roles', RoleController::class);
     Route::resource('levels', LevelController::class);
     Route::resource('customers', CustomerController::class);
 
-    // ini ditaruh sebelum Route::resource('products', ...)
-    Route::get('products/pending', [ProductPendingController::class, 'index'])
-        ->name('products.pending.index');
+    // --- Grup Route untuk Produk Pending ---
+    Route::prefix('products/pending')->name('products.pending.')->controller(ProductPendingController::class)->group(function () {
+        Route::get('/', 'index')->name('index'); // handles products.pending.index
+        Route::post('/{pending}/approve', 'approve')->name('approve'); // handles products.pending.approve
+        Route::post('/{pending}/reject', 'reject')->name('reject'); // handles products.pending.reject
+        Route::post('/{pending}/cancel', 'cancel')->name('cancel'); // handles products.pending.cancel
+        Route::get('/{pending}/edit', 'edit')->name('edit'); // handles products.pending.edit
+        Route::put('/{pending}', 'update')->name('update'); // handles products.pending.update
+    });
     Route::resource('products', ProductController::class);
 });
 

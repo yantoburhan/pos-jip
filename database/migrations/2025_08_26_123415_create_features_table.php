@@ -11,6 +11,7 @@ return new class extends Migration {
         Schema::create('features', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique(); // ex: manage_products, approve_data
+            $table->string('group');          // ex: Users, Products (KOLOM BARU DITAMBAHKAN)
             $table->timestamps();
         });
     }

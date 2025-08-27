@@ -14,32 +14,36 @@ class RolesAndFeaturesSeeder extends Seeder
         // =========================
         $features = [
             // User management
-            ['name' => 'manage_users'],
-            ['name' => 'view_users'],
-            ['name' => 'create_users'],
-            ['name' => 'update_users'],
-            ['name' => 'delete_users'],
-            ['name' => 'restore_users'],
-            ['name' => 'force_delete_users'],
+            ['name' => 'manage_users', 'group' => 'Users'],
+            ['name' => 'view_users', 'group' => 'Users'],
+            ['name' => 'create_users', 'group' => 'Users'],
+            ['name' => 'update_users', 'group' => 'Users'],
+            ['name' => 'delete_users', 'group' => 'Users'],
+            ['name' => 'restore_users', 'group' => 'Users'],
+            ['name' => 'force_delete_users', 'group' => 'Users'],
 
             // Product management
-            ['name' => 'view_products'],
-            ['name' => 'create_products'],
-            ['name' => 'update_products'],
-            ['name' => 'delete_products'],
+            ['name' => 'view_products', 'group' => 'Products'],
+            ['name' => 'create_products', 'group' => 'Products'],
+            ['name' => 'update_products', 'group' => 'Products'],
+            ['name' => 'delete_products', 'group' => 'Products'],
 
             // Level management
-            ['name' => 'view_levels'],
-            ['name' => 'create_levels'],
-            ['name' => 'update_levels'],
-            ['name' => 'delete_levels'],
-            ['name' => 'manage_levels'],
+            ['name' => 'view_levels', 'group' => 'Levels'],
+            ['name' => 'create_levels', 'group' => 'Levels'],
+            ['name' => 'update_levels', 'group' => 'Levels'],
+            ['name' => 'delete_levels', 'group' => 'Levels'],
+            ['name' => 'manage_levels', 'group' => 'Levels'],
 
             // Customer management
-            ['name' => 'view_customers'],
-            ['name' => 'create_customers'],
-            ['name' => 'update_customers'],
-            ['name' => 'delete_customers'],
+            ['name' => 'view_customers', 'group' => 'Customers'],
+            ['name' => 'create_customers', 'group' => 'Customers'],
+            ['name' => 'update_customers', 'group' => 'Customers'],
+            ['name' => 'delete_customers', 'group' => 'Customers'],
+
+            // Role management
+            ['name' => 'manage_roles', 'group' => 'Roles'],
+            ['name' => 'view_roles', 'group' => 'Roles'],
         ];
 
         DB::table('features')->insert($features);

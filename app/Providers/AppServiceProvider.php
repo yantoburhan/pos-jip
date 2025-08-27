@@ -33,5 +33,6 @@ class AppServiceProvider extends ServiceProvider
         Product::class => ProductPolicy::class,
         Level::class => LevelPolicy::class,
         Customer::class => CustomerPolicy::class,
+        Role::class => RolePolicy::class,
     ];
 }

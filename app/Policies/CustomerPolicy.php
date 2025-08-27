@@ -39,6 +39,6 @@ class CustomerPolicy
 
     public function viewOpsi(User $user): bool
     {
-        return $user->hasFeature('update_customers') || $user->hasFeature('update_customers');
+        return $user->hasFeature('update_customers') || $user->hasFeature('delete_customers');
     }
 }

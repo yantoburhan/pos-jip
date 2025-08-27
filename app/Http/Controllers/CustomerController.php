@@ -88,7 +88,7 @@ class CustomerController extends Controller
         ]);
 
         return redirect()->route('customers.index')
-                         ->with('success', 'Customer baru berhasil ditambahkan.');
+                        ->with('success', 'Customer baru berhasil ditambahkan.');
     }
 
     /**

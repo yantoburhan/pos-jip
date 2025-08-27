@@ -20,7 +20,7 @@ class ProductPendingController extends Controller
         Product::create([
             'name' => $pending->name,
             'price' => $pending->price,
-            'description' => $pending->description,
+            'point' => $pending->point,
         ]);
 
         $pending->delete();
@@ -59,7 +59,7 @@ class ProductPendingController extends Controller
         if ($pending->created_by !== auth()->id()) {
             abort(403);
         }
-        $pending->update($request->only(['name','price','stock','description']));
+        $pending->update($request->only(['name','price','point','description']));
         return redirect()->route('products.pending.index')->with('success', 'Produk pending diperbarui');
     }
 }

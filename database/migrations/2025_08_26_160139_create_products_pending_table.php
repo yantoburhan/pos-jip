@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->decimal('price', 12, 2);
+            $table->decimal('point', 12, 1);
             $table->text('description')->nullable();
             $table->unsignedBigInteger('created_by');
             $table->timestamps();

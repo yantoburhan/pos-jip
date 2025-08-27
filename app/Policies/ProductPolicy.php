@@ -39,6 +39,6 @@ class ProductPolicy
 
     public function viewOpsi(User $user): bool
     {
-        return $user->hasFeature('update_products') || $user->hasFeature('update_products');
+        return $user->hasFeature('update_products') || $user->hasFeature('delete_products');
     }
 }

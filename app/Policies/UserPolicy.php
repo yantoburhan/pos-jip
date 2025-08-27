@@ -11,7 +11,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasFeature('manage_users');
+        return $user->hasFeature('view_users');
     }
 
     /**

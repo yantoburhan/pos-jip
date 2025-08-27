@@ -29,8 +29,6 @@ class ProductController extends Controller
         $this->authorize('viewAny', Product::class);
 
         $products = Product::orderBy('id', 'asc')->paginate(10);
-
-        // Hitung jumlah pending
         $pendingCount = ProductPending::count();
 
         return view('products.index', compact('products', 'pendingCount'));
@@ -38,39 +36,34 @@ class ProductController extends Controller
 
     public function create()
     {
-        $this->authorize('create', Product::class);
-
+        // Izin untuk membuat akan dicek di method store
         return view('products.create');
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create', Product::class);
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:products,name'],
             'price' => ['required', 'integer'],
             'point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 
-        // 🔑 cek role user
-        if (auth()->user()->roles == 1) {
-            // 1 = admin → langsung masuk ke tabel products
-            Product::create([
-                'name' => $validated['name'],
-                'price' => $validated['price'],
-                'point' => $validated['point'],
-            ]);
+        // 🔑 LOGIKA BARU: Cek apakah user punya izin 'update' pada produk.
+        // Ini lebih fleksibel daripada cek 'roles == 1'.
+        if (auth()->user()->can('update', new Product())) {
+            // Jika BISA (punya izin 'update_products'), langsung masuk ke tabel utama.
+            Product::create($validated);
 
             return redirect()->route('products.index')
                 ->with('success', 'Produk baru berhasil ditambahkan.');
         } else {
-            // selain admin → masuk ke tabel pending
+            // Jika TIDAK BISA, masuk ke tabel pending.
             ProductPending::create([
-                'user_id' => auth()->id(),
+                'created_by' => auth()->id(),
                 'name' => $validated['name'],
                 'price' => $validated['price'],
                 'point' => $validated['point'],
+                'description' => 'Menunggu persetujuan admin',
             ]);
 
             return redirect()->route('products.pending.index')
@@ -95,11 +88,7 @@ class ProductController extends Controller
             'point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 
-        $product->update([
-            'name' => $validatedData['name'],
-            'price' => $validatedData['price'],
-            'point' => $validatedData['point'],
-        ]);
+        $product->update($validatedData);
 
         return redirect()->route('products.index')
             ->with('success', 'Data produk berhasil diperbarui.');
