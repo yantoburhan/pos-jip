@@ -22,12 +22,6 @@
                         </div>
 
                         <div class="mt-4">
-                            <x-input-label for="price" :value="__('Harga')" />
-                            <x-text-input id="price" class="block mt-1 w-full" type="number" name="price" :value="old('price', $pending->price)" required min="0" />
-                            <x-input-error :messages="$errors->get('price')" class="mt-2" />
-                        </div>
-
-                        <div class="mt-4">
                             <x-input-label for="point" :value="__('Point')" />
                             <x-text-input id="point" class="block mt-1 w-full" type="number" name="point" :value="old('point', $pending->point)" required min="0" />
                             <x-input-error :messages="$errors->get('point')" class="mt-2" />

@@ -185,7 +185,7 @@ class TransactionController extends Controller
     }
     public function searchProducts(Request $request) {
         $query = $request->get('q');
-        $products = Product::where('name', 'LIKE', "%{$query}%")->take(10)->get(['id', 'name', 'price', 'point']);
+        $products = Product::where('name', 'LIKE', "%{$query}%")->take(10)->get(['id', 'name', 'point']);
         return response()->json($products);
     }
 }

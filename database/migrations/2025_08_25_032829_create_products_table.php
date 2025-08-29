@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id(); // Kolom id (primary, auto-increment)
             $table->string('name'); // Kolom nama product
-            $table->decimal('price', 12, 2);
             $table->decimal('point', 12, 1); // Kolom point
             $table->timestamps(); // Kolom created_at dan updated_at
         });

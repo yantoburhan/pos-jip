@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('products_pending', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->decimal('price', 12, 2);
             $table->decimal('point', 12, 1);
             $table->text('description')->nullable();
             $table->unsignedBigInteger('created_by');

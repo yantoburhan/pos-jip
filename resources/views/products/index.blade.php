@@ -43,7 +43,6 @@
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Point</th>
                                 @can('viewOpsi', App\Models\Product::class)
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opsi</th> {{-- KOLOM OPSI --}}
@@ -55,7 +54,6 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $loop->iteration }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $product->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $product->point }}</td>
                                     @can('update', $product)
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">

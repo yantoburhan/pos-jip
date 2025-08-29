@@ -19,7 +19,6 @@ class ProductPendingController extends Controller
     {
         Product::create([
             'name' => $pending->name,
-            'price' => $pending->price,
             'point' => $pending->point,
         ]);
 
@@ -59,7 +58,7 @@ class ProductPendingController extends Controller
         if ($pending->created_by !== auth()->id()) {
             abort(403);
         }
-        $pending->update($request->only(['name','price','point','description']));
+        $pending->update($request->only(['name','point','description']));
         return redirect()->route('products.pending.index')->with('success', 'Produk pending diperbarui');
     }
 }

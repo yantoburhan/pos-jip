@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (products.length > 0) {
              products.forEach(prod => {
                 const div = document.createElement('div');
-                div.innerHTML = `${prod.name} - ${formatCurrency(prod.price)}`;
+                div.innerHTML = `${prod.name} (${prod.point} pts)`;
                 div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
                 div.onclick = () => updateProductRow(row, prod);
                 suggestionsDiv.appendChild(div);

@@ -20,7 +20,6 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produk</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Point</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Harga</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Opsi</th>
                             </tr>
@@ -32,7 +31,6 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $loop->iteration }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $pending->name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $pending->point }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($pending->price, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $pending->user->name ?? '-' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         {{-- LOGIKA BARU: Cek apakah user punya izin 'update' pada produk utama --}}

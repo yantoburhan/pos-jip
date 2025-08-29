@@ -20,7 +20,6 @@ class ProductController extends Controller
     // Nama atribut yang lebih ramah
     public array $customAttributes = [
         'name' => 'Nama Produk',
-        'price' => 'Harga Produk',
         'point' => 'Point',
     ];
 
@@ -44,7 +43,6 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:products,name'],
-            'price' => ['required', 'integer'],
             'point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 
@@ -61,7 +59,6 @@ class ProductController extends Controller
             ProductPending::create([
                 'created_by' => auth()->id(),
                 'name' => $validated['name'],
-                'price' => $validated['price'],
                 'point' => $validated['point'],
                 'description' => 'Menunggu persetujuan admin',
             ]);
@@ -84,7 +81,6 @@ class ProductController extends Controller
 
         $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($product->id)],
-            'price' => ['required', 'integer'],
             'point' => ['required', 'integer'],
         ], $this->customMessages, $this->customAttributes);
 

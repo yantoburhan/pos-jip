@@ -38,12 +38,6 @@
                                     type="number" name="point" value="{{ old('point', $product->point) }}" />
                             </div>
 
-                            <div class="mt-4">
-                                <label for="price" class="block font-medium text-sm text-gray-700">Harga</label>
-                                <input id="price" min="0" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" 
-                                    type="number" name="price" value="{{ old('price', $product->price) }}" required />
-                            </div>
-
                             <div class="flex items-center justify-end mt-4">
                                 <a href="{{ route('products.index') }}" class="text-sm text-gray-600 hover:text-gray-900 underline mr-4">
                                     Batal
