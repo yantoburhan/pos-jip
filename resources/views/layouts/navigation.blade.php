@@ -40,6 +40,12 @@
                         </x-nav-link>
                     @endcan
 
+                    @can('viewAny', App\Models\Transaction::class)
+                        <x-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
+                            {{ __('Transaction') }}
+                        </x-nav-link>
+                    @endcan
+
                     @can('viewAny', App\Models\Role::class)
                         <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
                             {{ __('Roles') }}

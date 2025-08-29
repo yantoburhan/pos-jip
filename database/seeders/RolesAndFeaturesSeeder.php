@@ -41,6 +41,12 @@ class RolesAndFeaturesSeeder extends Seeder
             ['name' => 'update_customers', 'group' => 'Customers'],
             ['name' => 'delete_customers', 'group' => 'Customers'],
 
+            // Transaction management
+            ['name' => 'view_transactions', 'group' => 'Transactions'],
+            ['name' => 'create_transactions', 'group' => 'Transactions'],
+            ['name' => 'update_transactions', 'group' => 'Transactions'],
+            ['name' => 'delete_transactions', 'group' => 'Transactions'],
+
             // Role management
             ['name' => 'manage_roles', 'group' => 'Roles'],
             ['name' => 'view_roles', 'group' => 'Roles'],
