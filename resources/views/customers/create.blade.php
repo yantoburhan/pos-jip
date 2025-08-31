@@ -15,7 +15,8 @@
 
                         <div>
                             <x-input-label for="no_hp_cust" :value="__('No. HP Customer')" />
-                            <x-text-input id="no_hp_cust" class="block mt-1 w-full" type="text" name="no_hp_cust" :value="old('no_hp_cust')" required autofocus />
+                            {{-- Nilai ini akan terisi otomatis jika diarahkan dari halaman transaksi --}}
+                            <x-text-input id="no_hp_cust" class="block mt-1 w-full" type="text" name="no_hp_cust" :value="old('no_hp_cust', $no_hp_cust ?? '')" required autofocus />
                             <x-input-error :messages="$errors->get('no_hp_cust')" class="mt-2" />
                         </div>
 
@@ -25,27 +26,10 @@
                             <x-input-error :messages="$errors->get('cust_name')" class="mt-2" />
                         </div>
 
-                        <div class="mt-4">
-                            <x-input-label for="level_id" :value="__('Level')" />
-                            <select name="level_id" id="level_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                <option value="" disabled selected>-- Pilih Level --</option>
-                                @foreach ($levels as $level)
-                                    <option value="{{ $level->id }}" {{ old('level_id') == $level->id ? 'selected' : '' }}>
-                                        {{ $level->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('level_id')" class="mt-2" />
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="total_spent" :value="__('Total Belanja Awal')" />
-                            <x-text-input id="total_spent" class="block mt-1 w-full" type="number" name="total_spent" :value="old('total_spent', 0)" required min="0"/>
-                            <x-input-error :messages="$errors->get('total_spent')" class="mt-2" />
-                        </div>
+                        {{-- Input untuk Level dan Total Belanja Awal telah dihapus karena akan dihitung otomatis --}}
 
                         <div class="flex items-center justify-end mt-4">
-                            <a href="{{ route('customers.index') }}" class="text-sm text-gray-600 hover:text-gray-900 underline">
+                            <a href="{{ url()->previous() }}" class="text-sm text-gray-600 hover:text-gray-900 underline">
                                 {{ __('Batal') }}
                             </a>
 

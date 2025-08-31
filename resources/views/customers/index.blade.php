@@ -37,8 +37,9 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $customer->no_hp_cust }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $customer->cust_name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $customer->level->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $customer->cust_point }}</td>
+                                    {{-- PERBAIKAN: Menambahkan ?? 'N/A' untuk handle customer tanpa level --}}
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ $customer->level->name ?? 'N/A' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ number_format($customer->cust_point, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($customer->total_spent, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         @can('update', $customer)

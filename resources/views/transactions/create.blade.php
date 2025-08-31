@@ -63,7 +63,6 @@
                         <div class="mt-10">
                             <h3 class="text-lg font-medium text-gray-900 border-b pb-2 mb-4">Produk</h3>
                             <div id="transaction-items-container" class="space-y-4">
-                                {{-- PERBAIKAN: Menampilkan kembali item yang sudah diinput jika validasi gagal --}}
                                 @if(old('items'))
                                     @foreach(old('items') as $index => $item)
                                         @php
@@ -145,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const template = document.getElementById('transaction-item-template');
     const addItemBtn = document.getElementById('add-item-btn');
     
-    // PERBAIKAN: Inisialisasi index berdasarkan item yang sudah ada dari validasi
     let itemIndex = {{ count(old('items', [])) }};
 
     const formatCurrency = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
@@ -155,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = clone.querySelector('.transaction-item-row');
         
         const newIndex = itemIndex++;
-        // Set name attributes with unique index
         row.querySelector('.id_product').name = `items[${newIndex}][id_product]`;
         row.querySelector('.price').name = `items[${newIndex}][price]`;
         row.querySelector('.quantity').name = `items[${newIndex}][quantity]`;
@@ -190,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('total-poin').textContent = `${totalPoin} Poin`;
     }
 
-    // --- EVENT LISTENERS ---
+    // --- Event Listeners ---
     addItemBtn.addEventListener('click', addNewItem);
     container.addEventListener('click', function(e) {
         if (e.target.closest('.remove-item-btn')) {
@@ -205,8 +202,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // --- AJAX SEARCH ---
-    
-    // Customer Search
     const customerSearch = document.getElementById('customer_search');
     const customerSuggestions = document.getElementById('customer_suggestions');
     const customerInfoDisplay = document.getElementById('customer-info-display');
@@ -214,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     customerSearch.addEventListener('keyup', async function(e) {
         const query = e.target.value;
-        hiddenCustomerInput.value = ''; // Clear hidden input on every keyup
+        hiddenCustomerInput.value = ''; 
         customerInfoDisplay.classList.add('hidden');
 
         if (query.length < 3) {
@@ -222,7 +217,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // PERBAIKAN: Menggunakan route() helper untuk URL yang benar
         const response = await fetch(`{{ route('search.customers') }}?q=${query}`);
         const customers = await response.json();
         
@@ -239,18 +233,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     customerInfoDisplay.innerHTML = `<div class="p-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">Customer: <strong>${cust.cust_name}</strong></div>`;
                     customerInfoDisplay.classList.remove('hidden');
-
                     customerSuggestions.classList.add('hidden');
                 };
                 customerSuggestions.appendChild(div);
             });
         } else {
-            customerSuggestions.innerHTML = `<div class="p-2 text-gray-500">Data tidak ditemukan.</div>`;
+            // PERBAIKAN: Menampilkan link untuk membuat customer baru
+            const createCustomerUrl = `{{ route('customers.create') }}?no_hp_cust=${encodeURIComponent(query)}`;
+            customerSuggestions.innerHTML = `
+                <div class="p-2 text-center text-gray-500">
+                    Data Tidak Ada. | 
+                    <a href="${createCustomerUrl}" class="text-blue-600 hover:text-blue-800 no-underline font-semibold">
+                        + create ${query}
+                    </a>
+                </div>
+            `;
         }
         customerSuggestions.classList.remove('hidden');
     });
 
-    // Product Search (using event delegation)
     container.addEventListener('keyup', async function(e) {
         if (!e.target.classList.contains('product-search')) return;
 
@@ -259,13 +260,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const idInput = row.querySelector('.id_product');
         const query = e.target.value;
 
-        idInput.value = ''; // Clear hidden input on every keyup
+        idInput.value = '';
 
         if (query.length < 2) {
             suggestionsDiv.classList.add('hidden');
             return;
         }
-        // PERBAIKAN: Menggunakan route() helper untuk URL yang benar
         const response = await fetch(`{{ route('search.products') }}?q=${query}`);
         const products = await response.json();
 
@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (products.length > 0) {
              products.forEach(prod => {
                 const div = document.createElement('div');
-                div.innerHTML = `${prod.name} (${prod.point} pts)`;
+                div.innerHTML = `${prod.name} (${prod.point} Pts)`;
                 div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
                 div.onclick = () => updateProductRow(row, prod);
                 suggestionsDiv.appendChild(div);
@@ -283,8 +283,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         suggestionsDiv.classList.remove('hidden');
     });
-
-    // Menutup dropdown jika klik di luar
+    
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.relative')) {
             customerSuggestions.classList.add('hidden');
@@ -296,14 +295,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
     
-    // PERBAIKAN: Panggil addNewItem() hanya jika tidak ada item lama
     if (itemIndex === 0) {
         addNewItem();
     } else {
-        // Jika ada item lama, cukup hitung totalnya
         updateCalculations();
     }
 });
 </script>
 </x-app-layout>
-

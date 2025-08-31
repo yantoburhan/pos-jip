@@ -14,6 +14,7 @@
                         @csrf
                         @method('PUT')
 
+                        {{-- Input yang bisa diubah --}}
                         <div>
                             <x-input-label for="no_hp_cust" :value="__('No. HP Customer')" />
                             <x-text-input id="no_hp_cust" class="block mt-1 w-full" type="text" name="no_hp_cust" :value="old('no_hp_cust', $customer->no_hp_cust)" required autofocus />
@@ -26,22 +27,23 @@
                             <x-input-error :messages="$errors->get('cust_name')" class="mt-2" />
                         </div>
                         
-                        <div class="mt-4">
-                            <x-input-label for="level_id" :value="__('Level')" />
-                            <select name="level_id" id="level_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                @foreach ($levels as $level)
-                                    <option value="{{ $level->id }}" {{ old('level_id', $customer->level_id) == $level->id ? 'selected' : '' }}>
-                                        {{ $level->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('level_id')" class="mt-2" />
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="total_spent" :value="__('Total Belanja')" />
-                            <x-text-input id="total_spent" class="block mt-1 w-full" type="number" name="total_spent" :value="old('total_spent', $customer->total_spent)" required min="0"/>
-                            <x-input-error :messages="$errors->get('total_spent')" class="mt-2" />
+                        {{-- Data yang dihitung otomatis (ditampilkan sebagai read-only) --}}
+                        <div class="mt-6 pt-4 border-t">
+                            <h3 class="text-lg font-medium text-gray-900">Statistik (Otomatis)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
+                                <div>
+                                    <span class="block font-medium text-gray-700">Level</span>
+                                    <p class="mt-1 p-2 bg-gray-100 rounded-md">{{ $customer->level->name ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <span class="block font-medium text-gray-700">Total Poin</span>
+                                    <p class="mt-1 p-2 bg-gray-100 rounded-md">{{ number_format($customer->cust_point, 0, ',', '.') }}</p>
+                                </div>
+                                <div>
+                                    <span class="block font-medium text-gray-700">Total Belanja</span>
+                                    <p class="mt-1 p-2 bg-gray-100 rounded-md">Rp {{ number_format($customer->total_spent, 0, ',', '.') }}</p>
+                                </div>
+                            </div>
                         </div>
 
 

@@ -14,7 +14,7 @@ class ProductController extends Controller
         '*.required' => ':Attribute tidak boleh kosong.',
         '*.max' => ':Attribute maksimal :max karakter.',
         '*.unique' => ':Attribute ini sudah terdaftar, silakan gunakan yang lain.',
-        '*.integer' => ':Attribute harus berupa angka.',
+        '*.numeric' => ':Attribute harus berupa angka.',
     ];
 
     // Nama atribut yang lebih ramah
@@ -43,7 +43,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:products,name'],
-            'point' => ['required', 'integer'],
+            'point' => ['required', 'numeric'],
         ], $this->customMessages, $this->customAttributes);
 
         // 🔑 LOGIKA BARU: Cek apakah user punya izin 'update' pada produk.
@@ -81,7 +81,7 @@ class ProductController extends Controller
 
         $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($product->id)],
-            'point' => ['required', 'integer'],
+            'point' => ['required', 'numeric'],
         ], $this->customMessages, $this->customAttributes);
 
         $product->update($validatedData);

@@ -34,9 +34,10 @@
 
                             <div class="mt-4">
                                 <label for="point" class="block font-medium text-sm text-gray-700">Point</label>
-                                <input id="point" min="0" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 
+                                {{-- PERBAIKAN: Menambahkan step="any" untuk mengizinkan desimal --}}
+                                <input id="point" min="0" step="any" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 
                                     focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" 
-                                    type="number" name="point" value="{{ old('point') }}" />
+                                    type="number" name="point" value="{{ old('point') }}" required />
                             </div>
 
                             {{-- Bagian Tombol Aksi --}}

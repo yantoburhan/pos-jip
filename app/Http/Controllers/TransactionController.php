@@ -12,9 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
-    // ... (customMessages dan customAttributes tetap sama) ...
     public array $customMessages = [
-        'required' => ':Attribute wajib diisi.', 'exists' => ':Attribute yang dipilih tidak valid atau tidak ditemukan.', 'array' => ':Attribute harus berupa array.', 'min' => ['array' => ':Attribute harus memiliki setidaknya :min item.',], 'integer' => ':Attribute harus berupa angka.',
+        'required' => ':Attribute wajib diisi.', 'exists' => ':Attribute yang dipilih tidak valid atau tidak ditemukan.', 'array' => ':Attribute harus berupa array.', 'min' => ['array' => ':Attribute harus memiliki setidaknya :min item.',], 'numeric' => ':Attribute harus berupa angka.', // Diperbarui untuk desimal
     ];
     public array $customAttributes = [
         'no_hp_cust' => 'Customer', 'date' => 'Tanggal', 'items' => 'Produk', 'items.*.id_product' => 'Produk pada baris', 'items.*.quantity' => 'Jumlah produk', 'items.*.price' => 'Harga produk',
@@ -35,7 +34,6 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
-        // ... (Logika store tetap sama) ...
         $this->authorize('create', Transaction::class);
 
         $validatedData = $request->validate([
@@ -47,19 +45,20 @@ class TransactionController extends Controller
             'items' => 'required|array|min:1',
             'items.*.id_product' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price' => 'required|integer|min:0',
+            'items.*.price' => 'required|numeric|min:0', // PERBAIKAN: Diubah dari integer ke numeric
         ], $this->customMessages, $this->customAttributes);
-
-        $total_penjualan = 0;
-        $total_poin = 0;
-        foreach ($validatedData['items'] as $itemData) {
-            $product = Product::find($itemData['id_product']);
-            $total_penjualan += $itemData['quantity'] * $itemData['price'];
-            $total_poin += $itemData['quantity'] * $product->point;
-        }
 
         try {
             DB::beginTransaction();
+            
+            $total_penjualan = 0;
+            $total_poin = 0;
+            foreach ($validatedData['items'] as $itemData) {
+                $product = Product::find($itemData['id_product']);
+                $total_penjualan += $itemData['quantity'] * $itemData['price'];
+                $total_poin += $itemData['quantity'] * $product->point;
+            }
+
             $transaction = Transaction::create([
                 'no_transaksi' => 'TRX-' . time(), 'date' => $validatedData['date'], 'no_hp_cust' => $validatedData['no_hp_cust'], 'alamat' => $validatedData['alamat'], 'wilayah' => $validatedData['wilayah'], 'kecamatan' => $validatedData['kecamatan'], 'operator_id' => Auth::id(), 'total_penjualan' => $total_penjualan, 'total_poin' => $total_poin,
             ]);
@@ -69,6 +68,12 @@ class TransactionController extends Controller
                     'no_transaksi' => $transaction->no_transaksi, 'id_product' => $itemData['id_product'], 'quantity' => $itemData['quantity'], 'price' => $itemData['price'], 'point_per_item' => Product::find($itemData['id_product'])->point, 'total_price' => $itemData['quantity'] * $itemData['price'],
                 ]);
             }
+            
+            $customer = Customer::find($validatedData['no_hp_cust']);
+            if ($customer) {
+                $customer->recalculateStats();
+            }
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -78,20 +83,13 @@ class TransactionController extends Controller
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil dibuat.');
     }
 
-    /**
-     * BARU: Menampilkan detail transaksi.
-     */
     public function show(Transaction $transaction)
     {
         $this->authorize('view', $transaction);
-        // Eager load relasi untuk efisiensi
         $transaction->load('customer', 'operator', 'items.product');
         return view('transactions.show', compact('transaction'));
     }
 
-    /**
-     * BARU: Menampilkan form untuk edit transaksi.
-     */
     public function edit(Transaction $transaction)
     {
         $this->authorize('update', $transaction);
@@ -99,12 +97,11 @@ class TransactionController extends Controller
         return view('transactions.edit', compact('transaction'));
     }
 
-    /**
-     * BARU: Mengupdate data transaksi di database.
-     */
     public function update(Request $request, Transaction $transaction)
     {
         $this->authorize('update', $transaction);
+        
+        $oldCustomerNoHp = $transaction->no_hp_cust;
 
         $validatedData = $request->validate([
             'no_hp_cust' => 'required|exists:customers,no_hp_cust',
@@ -115,42 +112,41 @@ class TransactionController extends Controller
             'items' => 'required|array|min:1',
             'items.*.id_product' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price' => 'required|integer|min:0',
+            'items.*.price' => 'required|numeric|min:0', // PERBAIKAN: Diubah dari integer ke numeric
         ], $this->customMessages, $this->customAttributes);
         
-        $total_penjualan = 0;
-        $total_poin = 0;
-        foreach ($validatedData['items'] as $itemData) {
-            $product = Product::find($itemData['id_product']);
-            $total_penjualan += $itemData['quantity'] * $itemData['price'];
-            $total_poin += $itemData['quantity'] * $product->point;
-        }
-
         try {
             DB::beginTransaction();
 
+            $total_penjualan = 0;
+            $total_poin = 0;
+            foreach ($validatedData['items'] as $itemData) {
+                $product = Product::find($itemData['id_product']);
+                $total_penjualan += $itemData['quantity'] * $itemData['price'];
+                $total_poin += $itemData['quantity'] * $product->point;
+            }
+
             $transaction->update([
-                'date' => $validatedData['date'],
-                'no_hp_cust' => $validatedData['no_hp_cust'],
-                'alamat' => $validatedData['alamat'],
-                'wilayah' => $validatedData['wilayah'],
-                'kecamatan' => $validatedData['kecamatan'],
-                'operator_id' => Auth::id(), // Operator yang mengedit
-                'total_penjualan' => $total_penjualan,
-                'total_poin' => $total_poin,
+                'date' => $validatedData['date'], 'no_hp_cust' => $validatedData['no_hp_cust'], 'alamat' => $validatedData['alamat'], 'wilayah' => $validatedData['wilayah'], 'kecamatan' => $validatedData['kecamatan'], 'operator_id' => Auth::id(), 'total_penjualan' => $total_penjualan, 'total_poin' => $total_poin,
             ]);
 
-            // Hapus item lama dan buat yang baru
             $transaction->items()->delete();
             foreach ($validatedData['items'] as $itemData) {
                 TransactionItem::create([
-                    'no_transaksi' => $transaction->no_transaksi,
-                    'id_product' => $itemData['id_product'],
-                    'quantity' => $itemData['quantity'],
-                    'price' => $itemData['price'],
-                    'point_per_item' => Product::find($itemData['id_product'])->point,
-                    'total_price' => $itemData['quantity'] * $itemData['price'],
+                    'no_transaksi' => $transaction->no_transaksi, 'id_product' => $itemData['id_product'], 'quantity' => $itemData['quantity'], 'price' => $itemData['price'], 'point_per_item' => Product::find($itemData['id_product'])->point, 'total_price' => $itemData['quantity'] * $itemData['price'],
                 ]);
+            }
+
+            $newCustomer = Customer::find($validatedData['no_hp_cust']);
+            if ($newCustomer) {
+                $newCustomer->recalculateStats();
+            }
+
+            if ($oldCustomerNoHp !== $validatedData['no_hp_cust']) {
+                $oldCustomer = Customer::find($oldCustomerNoHp);
+                if ($oldCustomer) {
+                    $oldCustomer->recalculateStats();
+                }
             }
 
             DB::commit();
@@ -162,22 +158,25 @@ class TransactionController extends Controller
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil diperbarui.');
     }
 
-    /**
-     * BARU: Menghapus transaksi dari database.
-     */
     public function destroy(Transaction $transaction)
     {
         $this->authorize('delete', $transaction);
         try {
-            // Items akan terhapus otomatis karena foreign key cascade
+            DB::beginTransaction();
+            $customerNoHp = $transaction->no_hp_cust;
             $transaction->delete();
+            $customer = Customer::find($customerNoHp);
+            if ($customer) {
+                $customer->recalculateStats();
+            }
+            DB::commit();
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Gagal menghapus transaksi: ' . $e->getMessage());
         }
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil dihapus.');
     }
 
-    // ... (Fungsi searchCustomers dan searchProducts tetap sama) ...
     public function searchCustomers(Request $request) {
         $query = $request->get('q');
         $customers = Customer::where('cust_name', 'LIKE', "%{$query}%")->orWhere('no_hp_cust', 'LIKE', "%{$query}%")->take(10)->get();
@@ -185,8 +184,8 @@ class TransactionController extends Controller
     }
     public function searchProducts(Request $request) {
         $query = $request->get('q');
+        // PERBAIKAN: Menambahkan 'price' ke dalam data yang dikembalikan
         $products = Product::where('name', 'LIKE', "%{$query}%")->take(10)->get(['id', 'name', 'point']);
         return response()->json($products);
     }
 }
-
