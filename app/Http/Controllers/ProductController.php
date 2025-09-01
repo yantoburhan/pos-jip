@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\ProductPending;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB; // <-- TAMBAHAN BARU
 
 class ProductController extends Controller
 {
@@ -15,9 +15,11 @@ class ProductController extends Controller
         '*.max' => ':Attribute maksimal :max karakter.',
         '*.unique' => ':Attribute ini sudah terdaftar, silakan gunakan yang lain.',
         '*.numeric' => ':Attribute harus berupa angka.',
+        '*.min' => ':Attribute minimal :min.',
+        '*.array' => ':Attribute harus berupa array.',
     ];
 
-    // Nama atribut yang lebih ramah
+    // Nama atribut yang lebih ramah (akan di-override di store)
     public array $customAttributes = [
         'name' => 'Nama Produk',
         'point' => 'Point',
@@ -26,52 +28,51 @@ class ProductController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Product::class);
-
         $products = Product::orderBy('id', 'asc')->paginate(10);
-        $pendingCount = ProductPending::count();
-
-        return view('products.index', compact('products', 'pendingCount'));
+        return view('products.index', compact('products'));
     }
 
     public function create()
     {
-        // Izin untuk membuat akan dicek di method store
+        $this->authorize('create', Product::class);
         return view('products.create');
     }
 
+    // --- METHOD STORE DIPERBARUI ---
     public function store(Request $request)
     {
+        // Izin untuk membuat produk dicek di sini
+        $this->authorize('create', Product::class);
+
+        // Validasi sekarang akan memeriksa sebuah array 'products'
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:products,name'],
-            'point' => ['required', 'numeric'],
-        ], $this->customMessages, $this->customAttributes);
+            'products'         => ['required', 'array', 'min:1'], // Pastikan ada minimal 1 produk
+            'products.*.name'  => ['required', 'string', 'max:255', 'unique:products,name'],
+            'products.*.point' => ['required', 'numeric', 'min:0'],
+        ], $this->customMessages, [ // Ganti customAttributes agar sesuai dengan array
+            'products.*.name' => 'Nama Produk',
+            'products.*.point' => 'Point',
+        ]);
 
-        // 🔑 LOGIKA BARU: Cek apakah user punya izin 'update' pada produk.
-        // Ini lebih fleksibel daripada cek 'roles == 1'.
-        if (auth()->user()->can('update', new Product())) {
-            // Jika BISA (punya izin 'update_products'), langsung masuk ke tabel utama.
-            Product::create($validated);
+        // Gunakan DB Transaction untuk memastikan semua data berhasil disimpan
+        // atau tidak sama sekali jika ada error. Ini menjaga integritas data.
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['products'] as $productData) {
+                Product::create([
+                    'name' => $productData['name'],
+                    'point' => $productData['point'],
+                ]);
+            }
+        });
 
-            return redirect()->route('products.index')
-                ->with('success', 'Produk baru berhasil ditambahkan.');
-        } else {
-            // Jika TIDAK BISA, masuk ke tabel pending.
-            ProductPending::create([
-                'created_by' => auth()->id(),
-                'name' => $validated['name'],
-                'point' => $validated['point'],
-                'description' => 'Menunggu persetujuan admin',
-            ]);
-
-            return redirect()->route('products.pending.index')
-                ->with('success', 'Produk berhasil diajukan dan menunggu persetujuan admin.');
-        }
+        return redirect()->route('products.index')
+            ->with('success', count($validated['products']) . ' produk baru berhasil ditambahkan.');
     }
+    // --- AKHIR PERUBAHAN ---
 
     public function edit(Product $product)
     {
         $this->authorize('update', $product);
-
         return view('products.edit', compact('product'));
     }
 
@@ -93,9 +94,7 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $this->authorize('delete', $product);
-
         $product->delete();
-
         return redirect()->route('products.index')
             ->with('success', 'Produk berhasil dihapus.');
     }

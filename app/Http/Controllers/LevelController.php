@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Level;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB; // <-- Tambahan baru
 
 class LevelController extends Controller
 {
@@ -17,6 +18,8 @@ class LevelController extends Controller
         '*.max' => ':Attribute maksimal :max karakter.',
         '*.unique' => ':Attribute ini sudah terdaftar, silakan gunakan yang lain.',
         '*.integer' => ':Attribute harus berupa angka.',
+        '*.array' => ':Attribute harus berupa array.',
+        '*.min' => ':Attribute minimal :min.',
     ];
 
     // =========================
@@ -33,7 +36,6 @@ class LevelController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Level::class);
-        // Urutkan berdasarkan poin agar lebih logis
         $levels = Level::orderBy('level_point', 'asc')->paginate(10);
         return view('levels.index', compact('levels'));
     }
@@ -50,22 +52,39 @@ class LevelController extends Controller
     /**
      * Menyimpan level baru ke database.
      */
+    // --- METHOD STORE DIPERBARUI UNTUK MENANGANI BANYAK DATA ---
     public function store(Request $request)
     {
         $this->authorize('create', Level::class);
 
+        // Validasi sekarang akan memeriksa sebuah array 'levels'
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:levels,name'],
-            'level_point' => ['required', 'integer', 'min:0'],
-        ], $this->customMessages, $this->customAttributes);
+            'levels'              => ['required', 'array', 'min:1'],
+            'levels.*.name'       => ['required', 'string', 'max:255', 'unique:levels,name'],
+            'levels.*.level_point'=> ['required', 'integer', 'min:0'],
+        ], $this->customMessages, [
+            'levels.*.name'       => 'Nama Level',
+            'levels.*.level_point'=> 'Point Level',
+        ]);
 
-        Level::create($validated);
-        
-        // PERBAIKAN: Picu pembaruan statistik semua customer
+        // Gunakan DB Transaction untuk memastikan semua data berhasil disimpan
+        // atau tidak sama sekali jika ada error.
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['levels'] as $levelData) {
+                Level::create([
+                    'name' => $levelData['name'],
+                    'level_point' => $levelData['level_point'],
+                ]);
+            }
+        });
+
+        // Picu pembaruan statistik semua customer SETELAH semua level baru dibuat
         $this->updateAllCustomerStats();
 
-        return redirect()->route('levels.index')->with('success', 'Level baru berhasil dibuat.');
+        return redirect()->route('levels.index')
+            ->with('success', count($validated['levels']) . ' level baru berhasil dibuat.');
     }
+    // --- AKHIR PERUBAHAN ---
 
     /**
      * Menampilkan form untuk mengedit level.
@@ -90,7 +109,6 @@ class LevelController extends Controller
 
         $level->update($validatedData);
 
-        // PERBAIKAN: Picu pembaruan statistik semua customer
         $this->updateAllCustomerStats();
 
         return redirect()->route('levels.index')->with('success', 'Data level berhasil diperbarui.');
@@ -103,12 +121,10 @@ class LevelController extends Controller
     {
         $this->authorize('delete', $level);
 
-        // Pengaman: Jangan biarkan level "N/A" dihapus
         if ($level->name === 'N/A') {
             return back()->with('error', 'Level "N/A" tidak boleh dihapus.');
         }
 
-        // Cari level "N/A" untuk dijadikan level default bagi customer yang ditinggalkan
         $defaultLevel = Level::where('name', 'N/A')->first();
         if ($defaultLevel) {
             Customer::where('level_id', $level->id)->update(['level_id' => $defaultLevel->id]);
@@ -116,7 +132,6 @@ class LevelController extends Controller
         
         $level->delete();
 
-        // PERBAIKAN: Picu pembaruan statistik semua customer
         $this->updateAllCustomerStats();
 
         return redirect()->route('levels.index')->with('success', 'Level berhasil dihapus.');
@@ -127,10 +142,8 @@ class LevelController extends Controller
      */
     private function updateAllCustomerStats()
     {
-        // Gunakan chunking agar efisien dan tidak menghabiskan memori
         Customer::chunk(200, function ($customers) {
             foreach ($customers as $customer) {
-                // Panggil method recalculateStats() yang ada di Model Customer
                 $customer->recalculateStats();
             }
         });

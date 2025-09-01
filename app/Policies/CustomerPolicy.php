@@ -25,10 +25,22 @@ class CustomerPolicy
         return $user->hasFeature('create_customers');
     }
 
+    public function updateAny(User $user): bool
+    {
+        // Logika ini sama dengan pengecekan izin umum
+        return $user->hasFeature('update_customers'); 
+    }
+
     /** Boleh update data customer */
     public function update(User $user, Customer $customer): bool
     {
         return $user->hasFeature('update_customers');
+    }
+
+    public function deleteAny(User $user): bool
+    {
+        // Logika ini sama dengan pengecekan izin umum
+        return $user->hasFeature('delete_customers'); 
     }
 
     /** Boleh hapus customer */

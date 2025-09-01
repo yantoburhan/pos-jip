@@ -7,6 +7,7 @@ use App\Models\Level;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -17,6 +18,9 @@ class CustomerController extends Controller
         '*.required' => ':Attribute tidak boleh kosong.',
         '*.max' => ':Attribute maksimal :max karakter.',
         '*.unique' => ':Attribute sudah terdaftar.',
+        '*.array' => ':Attribute harus berupa array.',
+        '*.min' => ':Attribute harus memiliki minimal :min item.',
+        '*.distinct' => 'Setiap :attribute harus unik (tidak boleh ada yang sama).',
     ];
 
     /**
@@ -42,6 +46,30 @@ class CustomerController extends Controller
         return view('customers.index', compact('customers'));
     }
 
+    // --- TAMBAHAN BARU: METHOD UNTUK REAL-TIME SEARCH ---
+    /**
+     * Menangani request pencarian real-time (AJAX).
+     */
+    public function search(Request $request)
+    {
+        $this->authorize('viewAny', Customer::class);
+
+        $query = Customer::with('level')->orderBy('cust_name', 'asc');
+
+        if ($request->filled('q')) {
+            $searchQuery = '%' . $request->q . '%';
+            $query->where('cust_name', 'like', $searchQuery)
+                  ->orWhere('no_hp_cust', 'like', $searchQuery);
+        }
+        
+        // Ambil data tanpa pagination, bisa ditambahkan limit jika datanya sangat banyak
+        $customers = $query->limit(50)->get(); 
+
+        // Kembalikan data dalam format JSON yang siap digunakan oleh JavaScript
+        return response()->json($customers);
+    }
+    // --- AKHIR TAMBAHAN BARU ---
+
     /**
      * Form tambah customer
      */
@@ -59,29 +87,48 @@ class CustomerController extends Controller
     {
         $this->authorize('create', Customer::class);
 
-        // PERBAIKAN: Validasi HANYA untuk field yang diinput oleh user.
+        $customersData = $request->input('customers', []);
+        foreach ($customersData as $index => $customer) {
+            if (isset($customer['no_hp_cust'])) {
+                $phoneNumber = ltrim($customer['no_hp_cust'], '0');
+                $customersData[$index]['no_hp_cust'] = '+62' . $phoneNumber;
+            }
+        }
+        $request->merge(['customers' => $customersData]);
+
         $validatedData = $request->validate([
-            'no_hp_cust' => ['required', 'string', 'max:15', 'unique:customers,no_hp_cust'],
-            'cust_name'  => ['required', 'string', 'max:255'],
-        ], $this->customMessages, $this->customAttributes);
-
-        // Cari level "N/A" sebagai level default.
+            'customers'              => ['required', 'array', 'min:1'],
+            'customers.*.no_hp_cust' => ['required', 'string', 'max:20', 'distinct', 'unique:customers,no_hp_cust'],
+            'customers.*.cust_name'    => ['required', 'string', 'max:255'],
+        ], $this->customMessages, [
+            'customers.*.no_hp_cust' => 'No HP Customer',
+            'customers.*.cust_name'  => 'Nama Customer',
+        ]);
+        
         $defaultLevel = Level::where('name', 'N/A')->first();
-
         if (!$defaultLevel) {
-            return back()->with('error', 'Level default "N/A" tidak ditemukan. Harap buat level dengan nama "N/A" di Manajemen Level.')->withInput();
+            return back()->with('error', 'Level default "N/A" tidak ditemukan. Harap buat level dengan nama "N/A" terlebih dahulu.')->withInput();
         }
 
-        Customer::create([
-            'no_hp_cust'  => $validatedData['no_hp_cust'],
-            'cust_name'   => $validatedData['cust_name'],
-            'cust_point'  => 0,
-            'total_spent' => 0,
-            'level_id'    => $defaultLevel->id, // Gunakan ID dari level "N/A"
-        ]);
+        $customersToCreate = [];
+        foreach ($validatedData['customers'] as $customerData) {
+            $customersToCreate[] = [
+                'no_hp_cust'  => $customerData['no_hp_cust'],
+                'cust_name'   => $customerData['cust_name'],
+                'cust_point'  => 0,
+                'total_spent' => 0,
+                'level_id'    => $defaultLevel->id,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ];
+        }
+        
+        DB::transaction(function () use ($customersToCreate) {
+            Customer::insert($customersToCreate);
+        });
 
         return redirect()->route('customers.index')
-                         ->with('success', 'Customer baru berhasil ditambahkan.');
+            ->with('success', count($customersToCreate) . ' customer baru berhasil ditambahkan.');
     }
 
     /**
@@ -99,17 +146,20 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $this->authorize('update', $customer);
-
-        // PERBAIKAN: Validasi HANYA untuk field yang bisa diedit.
+        
+        if ($request->has('no_hp_cust')) {
+            $phoneNumber = ltrim($request->input('no_hp_cust'), '0');
+            $request->merge(['no_hp_cust' => '+62' . $phoneNumber]);
+        }
+        
         $validatedData = $request->validate([
             'no_hp_cust'   => [
-                'required', 'string', 'max:15',
-                Rule::unique('customers')->ignore($customer->no_hp_cust, 'no_hp_cust'),
+                'required', 'string', 'max:20',
+                Rule::unique('customers')->ignore($customer->id),
             ],
             'cust_name'    => ['required', 'string', 'max:255'],
         ], $this->customMessages, $this->customAttributes);
         
-        // Gabungkan data dari user DENGAN data hasil kalkulasi otomatis
         $stats = $this->recalculateCustomerStats($validatedData['no_hp_cust']);
         
         $customer->update(array_merge($validatedData, $stats));
@@ -137,16 +187,11 @@ class CustomerController extends Controller
         $totalSpent = Transaction::where('no_hp_cust', $noHpCust)->sum('total_penjualan');
         $totalPoin = Transaction::where('no_hp_cust', $noHpCust)->sum('total_poin');
 
-        // Cari level yang sesuai, selain "N/A"
         $level = Level::where('level_point', '<=', $totalPoin)
-                      ->where('name', '!=', 'N/A')
-                      ->orderBy('level_point', 'desc')
-                      ->first();
-        
-        // Jika tidak ada level yang cocok (poin < terendah), gunakan level 'N/A'
-        if (!$level) {
-            $level = Level::where('name', 'N/A')->first();
-        }
+                        ->where('name', '!=', 'N/A')
+                        ->orderBy('level_point', 'desc')
+                        ->first()
+                 ?? Level::where('name', 'N/A')->first();
         
         return [
             'total_spent' => $totalSpent,

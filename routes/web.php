@@ -28,8 +28,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('levels', LevelController::class);
-    Route::resource('customers', CustomerController::class);
     Route::resource('products', ProductController::class);
+    
+    Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    Route::resource('customers', CustomerController::class);
 
     // --- Grup Route untuk Produk Pending ---
     Route::prefix('products/pending')->name('products.pending.')->controller(ProductPendingController::class)->group(function () {
@@ -50,4 +52,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-

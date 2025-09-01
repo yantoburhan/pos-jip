@@ -1,81 +1,71 @@
 <x-app-layout>
-    {{-- Bagian Header Halaman --}}
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Manajemen Product') }}
-            </h2>
-
-            {{-- Tombol Pending --}}
-            @can('create', App\Models\Product::class)
-                <a href="{{ route('products.pending.index') }}" 
-                class="relative inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-opacity-50">
-                    Pending
-                    @if($pendingCount > 0)
-                        <span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                            {{ $pendingCount }}
-                        </span>
-                    @endif
-                </a>
-            @endcan
-        </div>
-    </x-slot>
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {{-- Tombol Buat Product Baru --}}
-            <div class="flex justify-end mb-4">
-                @can('create', App\Models\Product::class)
-                    <a href="{{ route('products.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50">
-                        + Buat Product Baru
-                    </a>
-                @endcan
+            
+            {{-- Bagian Header Halaman & Tombol Aksi --}}
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-4 sm:px-0">
+                <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
+                    {{ __('Manajemen Product') }}
+                </h2>
+                
+                {{-- Grup Tombol Aksi --}}
+                <div class="flex items-center space-x-4 mt-4 sm:mt-0">
+                    @can('create', App\Models\Product::class)
+                        {{-- Tombol Buat Product Baru (SUDAH DIPERBAIKI) --}}
+                        <a href="{{ route('products.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition ease-in-out duration-150">
+                            {{-- PERUBAHAN DI SINI: stroke-width diubah dari "3" menjadi "2" --}}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                            </svg>
+                            Buat Product Baru
+                        </a>
+                    @endcan
+                </div>
             </div>
 
             {{-- Komponen untuk menampilkan pesan sukses/error --}}
             <x-message />
 
             {{-- Tabel Daftar Product --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+            <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-lg sm:rounded-xl">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50 dark:bg-slate-700">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Point</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">No</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Produk</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Point</th>
                                 @can('viewOpsi', App\Models\Product::class)
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opsi</th> {{-- KOLOM OPSI --}}
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Opsi</th>
                                 @endcan
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                             @forelse ($products as $i => $product)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $loop->iteration }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $product->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $product->point }}</td>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ $loop->iteration }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ $product->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ $product->point }}</td>
                                     @can('update', $product)
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            {{-- Tombol Ubah (Kuning) --}}
-                                            <a href="{{ route('products.edit', $product->id) }}" class="inline-block px-3 py-1 bg-yellow-500 text-white rounded-md text-xs font-semibold hover:bg-yellow-600">
-                                                Ubah
-                                            </a>
-
-                                            {{-- Tombol Hapus (Merah) --}}
-                                            <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="inline-block ml-2" onsubmit="return confirm('Apakah Anda yakin ingin menghapus product ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700">
-                                                    Hapus
-                                                </button>
-                                            </form>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <a href="{{ route('products.edit', $product->id) }}" class="inline-block px-3 py-1.5 bg-yellow-500 text-white rounded-md text-xs font-semibold hover:bg-yellow-600 transition-all">
+                                                    Ubah
+                                                </a>
+                                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus product ini?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700 transition-all">
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     @endcan
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Tidak ada data produk.
                                     </td>
                                 </tr>
