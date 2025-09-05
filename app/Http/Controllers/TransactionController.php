@@ -37,24 +37,22 @@ class TransactionController extends Controller
     {
         $this->authorize('viewAny', Transaction::class);
 
-        // 1. Ambil nilai 'per_page' dari request URL, default-nya 10.
         $perPage = $request->input('per_page', 10);
         
-        // 2. Siapkan query dasar. Diurutkan berdasarkan tanggal terbaru.
-        $query = Transaction::with('customer', 'operator')->latest('date');
+        $query = Transaction::with('customer', 'operator')
+                            ->where('status', 'approved')
+                            ->latest('date');
 
-        // 3. Handle jika user memilih untuk menampilkan "Semua" data.
         if ($perPage == 'all') {
-            // Hitung total data untuk dijadikan jumlah paginasi
             $total = $query->count();
-            // Jika ada data, paginasi sejumlah total. Jika tidak, default ke 10.
             $perPage = $total > 0 ? $total : 10;
         }
 
-        // 4. Lakukan pagination dengan nilai perPage yang sudah ditentukan.
         $transactions = $query->paginate((int)$perPage);
+    
+        $pendingCount = Transaction::where('status', 'pending')->count();
 
-        return view('transactions.index', compact('transactions'));
+        return view('transactions.index', compact('transactions', 'pendingCount'));
     }
 
     /**
@@ -96,6 +94,9 @@ class TransactionController extends Controller
                 $total_poin += $itemData['quantity'] * $product->point;
             }
 
+            $user = Auth::user();
+            $status = $user->hasFeature('approve_transactions') ? 'approved' : 'pending';
+
             $transaction = Transaction::create([
                 'no_transaksi' => 'TRX-' . time() . '-' . rand(100, 999),
                 'date' => $validatedData['date'],
@@ -103,11 +104,13 @@ class TransactionController extends Controller
                 'alamat' => $validatedData['alamat'],
                 'wilayah' => $validatedData['wilayah'],
                 'kecamatan' => $validatedData['kecamatan'],
-                'operator_id' => Auth::id(),
+                'operator_id' => $user->id,
                 'total_penjualan' => $total_penjualan,
                 'total_poin' => $total_poin,
+                'status' => $status,
             ]);
-
+            
+            // BAGIAN YANG HILANG & SUDAH SAYA KEMBALIKAN
             foreach ($validatedData['items'] as $itemData) {
                 TransactionItem::create([
                     'no_transaksi' => $transaction->no_transaksi,
@@ -124,14 +127,20 @@ class TransactionController extends Controller
                 $customer->recalculateStats();
             }
 
+            $message = ($status === 'approved')
+                ? 'Transaksi berhasil dibuat.'
+                : 'Transaksi berhasil dibuat dan menunggu persetujuan admin.';
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menyimpan transaksi: ' . $e->getMessage())->withInput();
         }
 
-        return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil dibuat.');
-    }
+        return redirect()->route('transactions.index')->with('success', $message);
+    } // <-- Penutup yang BENAR untuk method store()
+
+    // TIDAK ADA KURUNG KURAWAL EKSTRA DI SINI LAGI
 
     /**
      * Menampilkan detail satu transaksi.
@@ -226,6 +235,7 @@ class TransactionController extends Controller
         try {
             DB::beginTransaction();
             $customerNoHp = $transaction->no_hp_cust;
+            $transaction->items()->delete(); // Hapus item dulu
             $transaction->delete();
             $customer = Customer::find($customerNoHp);
             if ($customer) {
@@ -256,4 +266,63 @@ class TransactionController extends Controller
         $products = Product::where('name', 'LIKE', "%{$query}%")->take(10)->get(['id', 'name', 'point']);
         return response()->json($products);
     }
+
+    /**
+     * Menampilkan daftar transaksi yang masih pending.
+     */
+    public function pending(Request $request)
+    {
+        $this->authorize('hasFeature', 'view_pending_transactions');
+        
+        $pendingTransactions = Transaction::with('customer', 'operator')
+                                          ->where('status', 'pending')
+                                          ->latest('date')
+                                          ->get();
+
+        return view('transactions.pending', compact('pendingTransactions'));
+    }
+
+    /**
+     * Menyetujui transaksi yang pending.
+     */
+    public function approve(Transaction $transaction)
+    {
+        $this->authorize('hasFeature', 'approve_transactions');
+
+        $transaction->update(['status' => 'approved']);
+
+        if ($transaction->customer) {
+            $transaction->customer->recalculateStats();
+        }
+
+        return redirect()->route('transactions.pending')->with('success', 'Transaksi berhasil disetujui.');
+    }
+
+    /**
+     * Menolak (menghapus) transaksi yang pending.
+     */
+    public function reject(Transaction $transaction)
+    {
+        $this->authorize('hasFeature', 'approve_transactions');
+
+        try {
+            DB::beginTransaction();
+            $customerNoHp = $transaction->no_hp_cust;
+            
+            $transaction->items()->delete();
+            $transaction->delete();
+            
+            $customer = Customer::find($customerNoHp);
+            if ($customer) {
+                $customer->recalculateStats();
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menolak transaksi: ' . $e->getMessage());
+        }
+
+        return redirect()->route('transactions.pending')->with('success', 'Transaksi berhasil ditolak dan dihapus.');
+    }
 }
+

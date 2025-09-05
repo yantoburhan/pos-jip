@@ -54,6 +54,7 @@ class Transaction extends Model
         'operator_id',
         'total_penjualan',
         'total_poin',
+        'status',
     ];
 
     /**

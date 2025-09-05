@@ -45,7 +45,11 @@ Route::middleware('auth')->group(function () {
     
     // --- Route untuk Transaksi (Ini akan membuat transactions.show, .edit, .destroy, dll.) ---
     Route::resource('transactions', TransactionController::class);
-
+     Route::prefix('transactions')->name('transactions.')->controller(TransactionController::class)->group(function () {
+        Route::get('/pending/list', 'pending')->name('pending');
+        Route::patch('/{transaction}/approve', 'approve')->name('approve');
+        Route::delete('/{transaction}/reject', 'reject')->name('reject');
+    });
     // --- Route untuk Pencarian (AJAX) ---
     Route::get('/search/customers', [TransactionController::class, 'searchCustomers'])->name('search.customers');
     Route::get('/search/products', [TransactionController::class, 'searchProducts'])->name('search.products');

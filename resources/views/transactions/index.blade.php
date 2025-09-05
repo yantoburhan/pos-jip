@@ -2,18 +2,34 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            {{-- Bagian Header Halaman & Tombol Aksi (Pencarian Dihapus) --}}
+            {{-- Bagian Header Halaman & Tombol Aksi --}}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-4 sm:px-0">
                 <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
                     {{ __('Manajemen Transaksi') }}
                 </h2>
                 
-                @can('create', App\Models\Transaction::class)
-                    <a href="{{ route('transactions.create') }}" class="inline-flex items-center mt-4 sm:mt-0 px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition ease-in-out duration-150">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" /></svg>
-                        <span>Buat Transaksi</span>
+                <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+                    @can('hasFeature', 'view_pending_transactions')
+                    <a href="{{ route('transactions.pending') }}" class="relative inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-600 active:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition ease-in-out duration-150">
+                        <span>Pending</span>
+                        @if(Auth::user()->hasFeature('approve_transactions') && isset($pendingCount) && $pendingCount > 0)
+                            <span class="absolute -top-2 -right-2 flex h-5 w-5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 text-white text-xs items-center justify-center">
+                                    {{ $pendingCount }}
+                                </span>
+                            </span>
+                        @endif
                     </a>
-                @endcan
+                    @endcan
+
+                    @can('create', App\Models\Transaction::class)
+                        <a href="{{ route('transactions.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition ease-in-out duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" /></svg>
+                            <span>Buat Transaksi</span>
+                        </a>
+                    @endcan
+                </div>
             </div>
 
             <x-message />
@@ -29,9 +45,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
                                 <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Operator</th>
-                                @can('viewOpsi', App\Models\Transaction::class)
-                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Opsi</th>
-                                @endcan
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Opsi</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
@@ -42,25 +56,23 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ $transaction->customer->cust_name ?? 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200 text-right">Rp {{ number_format($transaction->total_penjualan, 0, ',', '.') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ $transaction->operator->name ?? 'N/A' }}</td>
-                                    @can('viewOpsi', $transaction)
-                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                            <div class="flex items-center justify-center space-x-2">
-                                                @can('view', $transaction)
-                                                    <a href="{{ route('transactions.show', $transaction->no_transaksi) }}" class="inline-block px-3 py-1.5 bg-sky-500 text-white rounded-md text-xs font-semibold hover:bg-sky-600">Detail</a>
-                                                @endcan
-                                                @can('update', $transaction)
-                                                    <a href="{{ route('transactions.edit', $transaction->no_transaksi) }}" class="inline-block px-3 py-1.5 bg-yellow-500 text-white rounded-md text-xs font-semibold hover:bg-yellow-600">Ubah</a>
-                                                @endcan
-                                                @can('delete', $transaction)
-                                                    <form action="{{ route('transactions.destroy', $transaction->no_transaksi) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700">Hapus</button>
-                                                    </form>
-                                                @endcan
-                                            </div>
-                                        </td>
-                                    @endcan
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                        <div class="flex items-center justify-center space-x-2">
+                                            @can('view', $transaction)
+                                                <a href="{{ route('transactions.show', $transaction->no_transaksi) }}" class="inline-block px-3 py-1.5 bg-sky-500 text-white rounded-md text-xs font-semibold hover:bg-sky-600">Detail</a>
+                                            @endcan
+                                            @can('update', $transaction)
+                                                <a href="{{ route('transactions.edit', $transaction->no_transaksi) }}" class="inline-block px-3 py-1.5 bg-yellow-500 text-white rounded-md text-xs font-semibold hover:bg-yellow-600">Ubah</a>
+                                            @endcan
+                                            @can('delete', $transaction)
+                                                <form action="{{ route('transactions.destroy', $transaction->no_transaksi) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700">Hapus</button>
+                                                </form>
+                                            @endcan
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -113,9 +125,10 @@
                     </div>
                 @endif
             </div>
+
         </div>
     </div>
-    
+
     <script>
         document.getElementById('per-page-select').addEventListener('change', function() {
             let url = new URL(window.location.href);
@@ -125,3 +138,4 @@
         });
     </script>
 </x-app-layout>
+

@@ -46,70 +46,79 @@ class RolesAndFeaturesSeeder extends Seeder
             ['name' => 'create_transactions', 'group' => 'Transactions'],
             ['name' => 'update_transactions', 'group' => 'Transactions'],
             ['name' => 'delete_transactions', 'group' => 'Transactions'],
+            
+            // --- Izin Pending dengan GRUP BARU ---
+            ['name' => 'view_pending_transactions', 'group' => 'Pending Transactions'], // DIUBAH: Nama grup baru
+            ['name' => 'approve_transactions', 'group' => 'Pending Transactions'],      // DIUBAH: Nama grup baru
+            ['name' => 'update_pending_transactions', 'group' => 'Pending Transactions'],// DIUBAH: Nama grup baru
+            ['name' => 'delete_pending_transactions', 'group' => 'Pending Transactions'],// DIUBAH: Nama grup baru
 
             // Role management
             ['name' => 'manage_roles', 'group' => 'Roles'],
             ['name' => 'view_roles', 'group' => 'Roles'],
         ];
 
-        DB::table('features')->insert($features);
+        // Kosongkan tabel sebelum mengisi untuk menghindari duplikat
+        DB::table('role_feature')->delete();
+        DB::table('features')->delete();
+        DB::table('roles')->delete();
 
-        // Ambil semua feature ID (pluck menghasilkan array [name => id])
+        DB::table('features')->insert($features);
         $allFeatures = DB::table('features')->pluck('id', 'name');
 
         // =========================
         // 2. Insert Roles
         // =========================
         $roles = [
-            ['id' => 1, 'name' => 'Admin'],   // Full akses
-            ['id' => 2, 'name' => 'Kasir'],   // Customer & Produk (partial)
-            ['id' => 3, 'name' => 'Staff'],   // Hanya view (read only)
+            ['id' => 1, 'name' => 'Admin'],
+            ['id' => 2, 'name' => 'Kasir'],
+            ['id' => 3, 'name' => 'Staff'],
         ];
-
         DB::table('roles')->insert($roles);
 
         // =========================
         // 3. Hubungkan Role dengan Features
         // =========================
-
         // --- Admin: semua fitur ---
         $roleFeatureAdmin = [];
-        foreach ($allFeatures as $featureName => $featureId) {
-            $roleFeatureAdmin[] = [
-                'role_id' => 1, // Admin
-                'feature_id' => $featureId,
-            ];
+        foreach ($allFeatures as $featureId) {
+            $roleFeatureAdmin[] = ['role_id' => 1, 'feature_id' => $featureId];
         }
         DB::table('role_feature')->insert($roleFeatureAdmin);
 
-        // --- Kasir: hanya customer (buat & lihat) + produk (buat & lihat) ---
+        // --- Kasir: ---
         $kasirFeatures = [
             'view_customers',
             'create_customers',
             'view_products',
             'create_products',
+            'view_transactions',
+            'create_transactions',
+            'view_pending_transactions',
+            'update_pending_transactions',
+            'delete_pending_transactions',
         ];
         $roleFeatureKasir = [];
         foreach ($kasirFeatures as $fname) {
-            $roleFeatureKasir[] = [
-                'role_id' => 2, // Kasir
-                'feature_id' => $allFeatures[$fname],
-            ];
+            if (isset($allFeatures[$fname])) {
+                $roleFeatureKasir[] = ['role_id' => 2, 'feature_id' => $allFeatures[$fname]];
+            }
         }
         DB::table('role_feature')->insert($roleFeatureKasir);
 
-        // --- Staff: hanya bisa view produk & customer ---
+        // --- Staff: ---
         $staffFeatures = [
             'view_products',
             'view_customers',
+            'view_transactions',
         ];
         $roleFeatureStaff = [];
         foreach ($staffFeatures as $fname) {
-            $roleFeatureStaff[] = [
-                'role_id' => 3, // Staff
-                'feature_id' => $allFeatures[$fname],
-            ];
+            if (isset($allFeatures[$fname])) {
+                $roleFeatureStaff[] = ['role_id' => 3, 'feature_id' => $allFeatures[$fname]];
+            }
         }
         DB::table('role_feature')->insert($roleFeatureStaff);
     }
 }
+
