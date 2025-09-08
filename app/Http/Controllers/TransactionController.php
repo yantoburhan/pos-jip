@@ -9,6 +9,7 @@ use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon; // <-- Tambahkan ini di bagian atas
 
 class TransactionController extends Controller
 {
@@ -97,8 +98,21 @@ class TransactionController extends Controller
             $user = Auth::user();
             $status = $user->hasFeature('approve_transactions') ? 'approved' : 'pending';
 
+            // --- AWAL BAGIAN BARU: Generate Nomor Transaksi Sesuai Format ---
+            $prefix = 'JI';
+            $datePart = Carbon::parse($validatedData['date'])->format('Ymd');
+            $operatorInitial = strtoupper(substr($user->name, 0, 1));
+
+            // Hitung jumlah transaksi yang sudah ada pada tanggal yang sama untuk mendapatkan nomor urut berikutnya
+            $todayCount = Transaction::whereDate('date', $validatedData['date'])->count();
+            $sequenceNumber = str_pad($todayCount + 1, 3, '0', STR_PAD_LEFT);
+
+            $generatedNoTransaksi = "{$prefix}-{$datePart}-{$operatorInitial}-{$sequenceNumber}";
+            // --- AKHIR BAGIAN BARU ---
+
             $transaction = Transaction::create([
-                'no_transaksi' => 'TRX-' . time() . '-' . rand(100, 999),
+                // 'no_transaksi' => 'TRX-' . time() . '-' . rand(100, 999), // <-- Kode lama
+                'no_transaksi' => $generatedNoTransaksi, // <-- Kode baru
                 'date' => $validatedData['date'],
                 'no_hp_cust' => $validatedData['no_hp_cust'],
                 'alamat' => $validatedData['alamat'],
@@ -110,7 +124,6 @@ class TransactionController extends Controller
                 'status' => $status,
             ]);
             
-            // BAGIAN YANG HILANG & SUDAH SAYA KEMBALIKAN
             foreach ($validatedData['items'] as $itemData) {
                 TransactionItem::create([
                     'no_transaksi' => $transaction->no_transaksi,
@@ -138,9 +151,7 @@ class TransactionController extends Controller
         }
 
         return redirect()->route('transactions.index')->with('success', $message);
-    } // <-- Penutup yang BENAR untuk method store()
-
-    // TIDAK ADA KURUNG KURAWAL EKSTRA DI SINI LAGI
+    }
 
     /**
      * Menampilkan detail satu transaksi.
@@ -275,9 +286,9 @@ class TransactionController extends Controller
         $this->authorize('hasFeature', 'view_pending_transactions');
         
         $pendingTransactions = Transaction::with('customer', 'operator')
-                                          ->where('status', 'pending')
-                                          ->latest('date')
-                                          ->get();
+                                            ->where('status', 'pending')
+                                            ->latest('date')
+                                            ->get();
 
         return view('transactions.pending', compact('pendingTransactions'));
     }
@@ -325,4 +336,3 @@ class TransactionController extends Controller
         return redirect()->route('transactions.pending')->with('success', 'Transaksi berhasil ditolak dan dihapus.');
     }
 }
-
