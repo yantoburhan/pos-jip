@@ -46,29 +46,21 @@ class CustomerController extends Controller
         return view('customers.index', compact('customers'));
     }
 
-    // --- TAMBAHAN BARU: METHOD UNTUK REAL-TIME SEARCH ---
     /**
      * Menangani request pencarian real-time (AJAX).
      */
     public function search(Request $request)
     {
         $this->authorize('viewAny', Customer::class);
-
         $query = Customer::with('level')->orderBy('cust_name', 'asc');
-
         if ($request->filled('q')) {
             $searchQuery = '%' . $request->q . '%';
             $query->where('cust_name', 'like', $searchQuery)
                   ->orWhere('no_hp_cust', 'like', $searchQuery);
         }
-        
-        // Ambil data tanpa pagination, bisa ditambahkan limit jika datanya sangat banyak
-        $customers = $query->limit(50)->get(); 
-
-        // Kembalikan data dalam format JSON yang siap digunakan oleh JavaScript
+        $customers = $query->limit(50)->get();
         return response()->json($customers);
     }
-    // --- AKHIR TAMBAHAN BARU ---
 
     /**
      * Form tambah customer
@@ -86,7 +78,6 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Customer::class);
-
         $customersData = $request->input('customers', []);
         foreach ($customersData as $index => $customer) {
             if (isset($customer['no_hp_cust'])) {
@@ -99,7 +90,7 @@ class CustomerController extends Controller
         $validatedData = $request->validate([
             'customers'              => ['required', 'array', 'min:1'],
             'customers.*.no_hp_cust' => ['required', 'string', 'max:20', 'distinct', 'unique:customers,no_hp_cust'],
-            'customers.*.cust_name'    => ['required', 'string', 'max:255'],
+            'customers.*.cust_name'  => ['required', 'string', 'max:255'],
         ], $this->customMessages, [
             'customers.*.no_hp_cust' => 'No HP Customer',
             'customers.*.cust_name'  => 'Nama Customer',
@@ -142,31 +133,50 @@ class CustomerController extends Controller
 
     /**
      * Update customer
+     * INI ADALAH FUNGSI YANG DIPERBARUI
      */
     public function update(Request $request, Customer $customer)
     {
         $this->authorize('update', $customer);
-        
+
+        // Simpan No HP original untuk validasi unique
+        $originalNoHp = $customer->no_hp_cust;
+
+        // Format No HP yang baru dari input form
         if ($request->has('no_hp_cust')) {
             $phoneNumber = ltrim($request->input('no_hp_cust'), '0');
             $request->merge(['no_hp_cust' => '+62' . $phoneNumber]);
         }
-        
+
+        // Validasi data yang masuk
         $validatedData = $request->validate([
-            'no_hp_cust'   => [
-                'required', 'string', 'max:20',
-                Rule::unique('customers')->ignore($customer->id),
+            'no_hp_cust' => [
+                'required',
+                'string',
+                'max:20',
+                // Cek unique, tapi abaikan No HP original dari customer ini
+                Rule::unique('customers')->ignore($originalNoHp, 'no_hp_cust'),
             ],
-            'cust_name'    => ['required', 'string', 'max:255'],
+            'cust_name'  => ['required', 'string', 'max:255'],
         ], $this->customMessages, $this->customAttributes);
-        
-        $stats = $this->recalculateCustomerStats($validatedData['no_hp_cust']);
-        
-        $customer->update(array_merge($validatedData, $stats));
+
+        // Gunakan DB Transaction untuk memastikan semua operasi berhasil
+        DB::transaction(function () use ($customer, $validatedData) {
+            // Lakukan update.
+            // Karena sudah ada onUpdate('cascade'), semua data di tabel 'transactions'
+            // akan otomatis diperbarui oleh database jika no_hp_cust berubah.
+            $customer->update($validatedData);
+
+            // Panggil method recalculateStats dari model Customer.
+            // Method ini akan menghitung ulang total poin, belanja, dan level
+            // berdasarkan No HP yang baru.
+            $customer->recalculateStats();
+        });
 
         return redirect()->route('customers.index')
                          ->with('success', 'Data customer berhasil diperbarui.');
     }
+
 
     /**
      * Hapus customer
@@ -174,29 +184,16 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         $this->authorize('delete', $customer);
+
+        // Cek apakah customer memiliki transaksi
+        if (Transaction::where('no_hp_cust', $customer->no_hp_cust)->exists()) {
+            return redirect()->route('customers.index')
+                             ->with('error', 'Gagal menghapus. Customer ini memiliki riwayat transaksi.');
+        }
+
         $customer->delete();
+        
         return redirect()->route('customers.index')
                          ->with('success', 'Customer berhasil dihapus.');
-    }
-    
-    /**
-     * Fungsi private untuk menghitung ulang statistik customer.
-     */
-    private function recalculateCustomerStats(string $noHpCust): array
-    {
-        $totalSpent = Transaction::where('no_hp_cust', $noHpCust)->sum('total_penjualan');
-        $totalPoin = Transaction::where('no_hp_cust', $noHpCust)->sum('total_poin');
-
-        $level = Level::where('level_point', '<=', $totalPoin)
-                        ->where('name', '!=', 'N/A')
-                        ->orderBy('level_point', 'desc')
-                        ->first()
-                 ?? Level::where('name', 'N/A')->first();
-        
-        return [
-            'total_spent' => $totalSpent,
-            'cust_point'  => $totalPoin,
-            'level_id'    => $level ? $level->id : null,
-        ];
     }
 }
