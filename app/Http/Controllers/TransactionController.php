@@ -9,7 +9,7 @@ use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon; // <-- Tambahkan ini di bagian atas
+use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
@@ -42,7 +42,8 @@ class TransactionController extends Controller
         
         $query = Transaction::with('customer', 'operator')
                             ->where('status', 'approved')
-                            ->latest('date');
+                            // --- DIUBAH: Mengurutkan berdasarkan waktu pembuatan ---
+                            ->latest(); 
 
         if ($perPage == 'all') {
             $total = $query->count();
@@ -98,21 +99,15 @@ class TransactionController extends Controller
             $user = Auth::user();
             $status = $user->hasFeature('approve_transactions') ? 'approved' : 'pending';
 
-            // --- AWAL BAGIAN BARU: Generate Nomor Transaksi Sesuai Format ---
             $prefix = 'JI';
             $datePart = Carbon::parse($validatedData['date'])->format('Ymd');
             $operatorInitial = strtoupper(substr($user->name, 0, 1));
-
-            // Hitung jumlah transaksi yang sudah ada pada tanggal yang sama untuk mendapatkan nomor urut berikutnya
             $todayCount = Transaction::whereDate('date', $validatedData['date'])->count();
             $sequenceNumber = str_pad($todayCount + 1, 3, '0', STR_PAD_LEFT);
-
             $generatedNoTransaksi = "{$prefix}-{$datePart}-{$operatorInitial}-{$sequenceNumber}";
-            // --- AKHIR BAGIAN BARU ---
 
             $transaction = Transaction::create([
-                // 'no_transaksi' => 'TRX-' . time() . '-' . rand(100, 999), // <-- Kode lama
-                'no_transaksi' => $generatedNoTransaksi, // <-- Kode baru
+                'no_transaksi' => $generatedNoTransaksi,
                 'date' => $validatedData['date'],
                 'no_hp_cust' => $validatedData['no_hp_cust'],
                 'alamat' => $validatedData['alamat'],
@@ -246,7 +241,7 @@ class TransactionController extends Controller
         try {
             DB::beginTransaction();
             $customerNoHp = $transaction->no_hp_cust;
-            $transaction->items()->delete(); // Hapus item dulu
+            $transaction->items()->delete();
             $transaction->delete();
             $customer = Customer::find($customerNoHp);
             if ($customer) {
