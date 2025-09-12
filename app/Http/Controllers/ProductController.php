@@ -25,10 +25,24 @@ class ProductController extends Controller
         'point' => 'Point',
     ];
 
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Product::class);
-        $products = Product::orderBy('id', 'asc')->paginate(10);
+
+        // Ambil kata kunci pencarian dari request
+        $searchQuery = $request->input('q');
+
+        // Siapkan query dasar
+        $query = Product::orderBy('id', 'asc');
+
+        // Jika ada input pencarian, tambahkan filter 'where'
+        if ($searchQuery) {
+            $query->where('name', 'like', "%{$searchQuery}%");
+        }
+
+        // Lakukan paginasi dan jangan lupakan withQueryString()
+        $products = $query->paginate(10)->withQueryString();
+
         return view('products.index', compact('products'));
     }
 

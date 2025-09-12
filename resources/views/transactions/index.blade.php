@@ -1,14 +1,30 @@
 <x-app-layout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             {{-- Bagian Header Halaman & Tombol Aksi --}}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-4 sm:px-0">
                 <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
                     {{ __('Manajemen Transaksi') }}
                 </h2>
-                
-                <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+
+                <div class="flex items-center space-x-3 mt-4 sm:mt-0 w-full sm:w-auto">
+                    {{-- Form Pencarian --}}
+                    <form method="GET" action="{{ route('transactions.index') }}">
+                        <div class="w-full sm:w-64">
+                            <label for="search-input" class="sr-only">Cari</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                                </div>
+                                <input type="text" id="search-input"
+                                name="q"
+                                value="{{ request('q') }}"
+                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white dark:bg-slate-900/50 dark:border-slate-600 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="Ketik untuk mencari...">
+                            </div>
+                        </div>
+                    </form>
                     @can('hasFeature', 'view_pending_transactions')
                     <a href="{{ route('transactions.pending') }}" class="relative inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-600 active:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition ease-in-out duration-150">
                         <span>Pending</span>
@@ -85,7 +101,7 @@
                     </table>
                 </div>
             </div>
-            
+
             {{-- Bagian Navigasi Halaman --}}
             <div class="mt-6 flex flex-col sm:flex-row justify-between items-center px-4 sm:px-0 space-y-4 sm:space-y-0">
                 {{-- Dropdown untuk "Show Entries" --}}
@@ -99,7 +115,7 @@
                     </select>
                      <span>entri</span>
                 </div>
-                
+
                 {{-- Indikator Halaman & Link Paginasi --}}
                 @if ($transactions->hasPages() && request('per_page') != 'all')
                     <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
@@ -112,14 +128,14 @@
                             <span class="font-medium">{{ $transactions->total() }}</span>
                             hasil
                         </div>
-                        
+
                         <div class="w-full sm:w-auto">
                             {{ $transactions->appends(request()->query())->links() }}
                         </div>
                     </div>
                 @else
                     <div class="text-sm text-gray-700 dark:text-gray-400">
-                        Menampilkan semua 
+                        Menampilkan semua
                         <span class="font-medium">{{ $transactions->count() }}</span>
                         hasil
                     </div>

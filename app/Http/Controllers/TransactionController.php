@@ -34,24 +34,39 @@ class TransactionController extends Controller
     /**
      * Menampilkan daftar transaksi dengan paginasi dinamis.
      */
+    // app/Http/Controllers/TransactionController.php
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', Transaction::class);
 
         $perPage = $request->input('per_page', 10);
-        
-        $query = Transaction::with('customer', 'operator')
-                            ->where('status', 'approved')
-                            // --- DIUBAH: Mengurutkan berdasarkan waktu pembuatan ---
-                            ->latest(); 
+        $searchQuery = $request->input('q'); // DIUBAH: Menggunakan 'q' agar konsisten dengan Customer
 
+        // 1. Siapkan query dasar dengan semua kondisi yang dibutuhkan
+        $query = Transaction::with('customer', 'operator')
+                            ->where('status', 'approved') // Kondisi status digabungkan di sini
+                            ->latest(); // Mengurutkan berdasarkan tanggal/waktu pembuatan
+
+        // 2. Terapkan filter pencarian jika ada input 'q'
+        if ($searchQuery) {
+            $query->where(function($q) use ($searchQuery) {
+                $q->where('no_transaksi', 'like', "%{$searchQuery}%")
+                ->orWhereHas('customer', function($subQ) use ($searchQuery) {
+                    $subQ->where('cust_name', 'like', "%{$searchQuery}%");
+                });
+            });
+        }
+
+        // 3. Lakukan pagination (logika 'all' tetap dipertahankan)
         if ($perPage == 'all') {
             $total = $query->count();
             $perPage = $total > 0 ? $total : 10;
         }
 
-        $transactions = $query->paginate((int)$perPage);
-    
+        $transactions = $query->paginate((int)$perPage)->withQueryString();
+
+        // Ambil jumlah pending untuk notifikasi
         $pendingCount = Transaction::where('status', 'pending')->count();
 
         return view('transactions.index', compact('transactions', 'pendingCount'));
@@ -87,7 +102,7 @@ class TransactionController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             $total_penjualan = 0;
             $total_poin = 0;
             foreach ($validatedData['items'] as $itemData) {
@@ -118,7 +133,7 @@ class TransactionController extends Controller
                 'total_poin' => $total_poin,
                 'status' => $status,
             ]);
-            
+
             foreach ($validatedData['items'] as $itemData) {
                 TransactionItem::create([
                     'no_transaksi' => $transaction->no_transaksi,
@@ -129,7 +144,7 @@ class TransactionController extends Controller
                     'total_price' => $itemData['quantity'] * $itemData['price'],
                 ]);
             }
-            
+
             $customer = Customer::find($validatedData['no_hp_cust']);
             if ($customer) {
                 $customer->recalculateStats();
@@ -174,7 +189,7 @@ class TransactionController extends Controller
     public function update(Request $request, Transaction $transaction)
     {
         $this->authorize('update', $transaction);
-        
+
         $oldCustomerNoHp = $transaction->no_hp_cust;
 
         $validatedData = $request->validate([
@@ -188,7 +203,7 @@ class TransactionController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
         ], $this->customMessages, $this->customAttributes);
-        
+
         try {
             DB::beginTransaction();
 
@@ -279,7 +294,7 @@ class TransactionController extends Controller
     public function pending(Request $request)
     {
         $this->authorize('hasFeature', 'view_pending_transactions');
-        
+
         $pendingTransactions = Transaction::with('customer', 'operator')
                                             ->where('status', 'pending')
                                             ->latest('date')
@@ -314,10 +329,10 @@ class TransactionController extends Controller
         try {
             DB::beginTransaction();
             $customerNoHp = $transaction->no_hp_cust;
-            
+
             $transaction->items()->delete();
             $transaction->delete();
-            
+
             $customer = Customer::find($customerNoHp);
             if ($customer) {
                 $customer->recalculateStats();

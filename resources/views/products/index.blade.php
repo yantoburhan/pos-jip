@@ -1,27 +1,43 @@
 <x-app-layout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             {{-- Bagian Header Halaman & Tombol Aksi --}}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-4 sm:px-0">
-                <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
-                    {{ __('Manajemen Product') }}
-                </h2>
-                
-                {{-- Grup Tombol Aksi --}}
-                <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-                    @can('create', App\Models\Product::class)
-                        {{-- Tombol Buat Product Baru (SUDAH DIPERBAIKI) --}}
-                        <a href="{{ route('products.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition ease-in-out duration-150">
-                            {{-- PERUBAHAN DI SINI: stroke-width diubah dari "3" menjadi "2" --}}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
-                            </svg>
-                            Buat Product Baru
-                        </a>
-                    @endcan
+    <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
+        {{ __('Manajemen Product') }}
+    </h2>
+
+        {{-- Grup Tombol Aksi dan Pencarian --}}
+        <div class="flex items-center space-x-3 mt-4 sm:mt-0 w-full sm:w-auto">
+
+            {{-- Form Pencarian --}}
+            <form method="GET" action="{{ route('products.index') }}">
+                <div class="w-full sm:w-64">
+                    <label for="search-input" class="sr-only">Cari</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input type="text" id="search-input"
+                            name="q"
+                            value="{{ request('q') }}"
+                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white dark:bg-slate-900/50 dark:border-slate-600 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            placeholder="Cari nama produk...">
+                    </div>
                 </div>
-            </div>
+            </form>
+
+            @can('create', App\Models\Product::class)
+                <a href="{{ route('products.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus-ring-offset-slate-800 transition ease-in-out duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                    </svg>
+                    Buat Product Baru
+                </a>
+            @endcan
+        </div>
+    </div>
 
             {{-- Komponen untuk menampilkan pesan sukses/error --}}
             <x-message />
