@@ -27,7 +27,7 @@
                             {{ __('Products') }}
                         </x-nav-link>
                     @endcan
-                    
+
                     @can('viewAny', App\Models\Level::class)
                         <x-nav-link :href="route('levels.index')" :active="request()->routeIs('levels.*')">
                             {{ __('Levels') }}
@@ -129,7 +129,13 @@
                     {{ __('Customers') }}
                 </x-responsive-nav-link>
             @endcan
-            
+
+            @can('viewAny', App\Models\Role::class)
+                <x-responsive-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
+                    {{ __('Transactions') }}
+                </x-responsive-nav-link>
+            @endcan
+
             @can('viewAny', App\Models\Role::class)
                 <x-responsive-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
                     {{ __('Roles') }}
