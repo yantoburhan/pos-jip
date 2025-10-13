@@ -90,6 +90,10 @@
                     </table>
                 </div>
             </div>
+
+            <div id="pagination-links" class="mt-6">
+                {{ $products->appends(['q' => request('q')])->links() }}
+            </div>
         </div>
     </div>
 </x-app-layout>

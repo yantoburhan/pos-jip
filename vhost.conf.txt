@@ -1,0 +1,50 @@
+server {
+  listen 80;
+  listen [::]:80;
+  #listen 443 ssl;
+  #listen [::]:443 ssl;
+  #{{ssl_certificate_key}}
+  #{{ssl_certificate}}
+  server_name jayainteropoint.com;
+  #return 301 https://www.jayainteropoint.com$request_uri;
+}
+
+server {
+  listen 8080;
+  listen [::]:8080;
+  server_name jayainteropoint.com www.jayainteropoint.com www1.jayainteropoint.com;
+  root /home/jayainteropoint/htdocs/www.jayainteropoint.com/public;
+
+  try_files $uri $uri/ /index.php?$args;
+  index index.php index.html;
+  
+  location /.well-known/acme-challenge/ {
+    root /home/jayainteropoint/htdocs/jayainteropoint.com;
+    try_files $uri $uri/ =404;
+    allow all;
+  }
+
+  location ~ \.php$ {
+    include fastcgi_params;
+    fastcgi_intercept_errors on;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    try_files $uri =404;
+    fastcgi_read_timeout 3600;
+    fastcgi_send_timeout 3600;
+    fastcgi_param HTTPS "on";
+    fastcgi_param SERVER_PORT 443;
+    fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+    fastcgi_param PHP_VALUE "{{php_settings}}";
+  }
+
+  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+    add_header Access-Control-Allow-Origin "*";
+    expires max;
+    access_log off;
+  }
+
+  if (-f $request_filename) {
+    break;
+  }
+}
