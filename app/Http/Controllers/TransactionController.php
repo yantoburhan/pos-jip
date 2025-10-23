@@ -96,7 +96,7 @@ class TransactionController extends Controller
             'kecamatan' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.id_product' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|gt:0',
             'items.*.price' => 'required|numeric|min:0',
         ], $this->customMessages, $this->customAttributes);
 

@@ -9,7 +9,7 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
-                    
+
                     @if ($errors->any())
                         <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
                             <div class="font-medium">{{ __('Whoops! Ada beberapa kesalahan.') }}</div>
@@ -23,7 +23,7 @@
 
                     <form method="POST" action="{{ route('transactions.store') }}" id="transaction-form">
                         @csrf
-                        
+
                         <!-- Bagian Utama Transaksi -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div>
@@ -52,7 +52,7 @@
                                     <option value="luar_medan" @if(old('wilayah') == 'luar_medan') selected @endif>Luar Medan</option>
                                 </select>
                             </div>
-                            
+
                             <div>
                                 <label for="kecamatan" class="block font-medium text-sm text-gray-700">{{ __('Kecamatan (Opsional)') }}</label>
                                 <input id="kecamatan" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" type="text" name="kecamatan" value="{{ old('kecamatan') }}" />
@@ -76,10 +76,12 @@
                                             </div>
                                             <div class="col-span-6 md:col-span-1"><input type="text" class="point_per_item bg-gray-200 text-center border-gray-300 rounded-md shadow-sm" disabled placeholder="Poin" value="{{ $product ? $product->point : '' }}" /></div>
                                             <div class="col-span-6 md:col-span-2"><input type="number" name="items[{{ $index }}][price]" class="price block w-full border-gray-300 rounded-md shadow-sm" placeholder="Harga" value="{{ $item['price'] }}"/></div>
-                                            <div class="col-span-6 md:col-span-1"><input type="number" name="items[{{ $index }}][quantity]" class="quantity block w-full border-gray-300 rounded-md shadow-sm" value="{{ $item['quantity'] }}" min="1"/></div>
-                                            <div class="col-span-6 md:col-span-3"><input type="text" class="total_price bg-gray-200 font-semibold border-gray-300 rounded-md shadow-sm" disabled /></div>
-                                            <div class="col-span-12 md:col-span-1 flex justify-end">
-                                                <button type="button" class="remove-item-btn text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100">&times;</button>
+                                            <div class="col-span-6 md:col-span-2"><input type="number" name="items[{{ $index }}][quantity]" class="quantity block w-full border-gray-300 rounded-md shadow-sm" value="{{ $item['quantity'] }}" min="0.01" step="any"/></div>
+                                            <div class="col-span-12 md:col-span-3">
+                                                <div class="flex items-center w-full bg-gray-200 border border-gray-300 rounded-md shadow-sm overflow-hidden">
+                                                    <input type="text" class="total_price font-semibold border-none bg-transparent flex-grow focus:ring-0 p-2" disabled />
+                                                    <button type="button" class="remove-item-btn text-red-500 hover:text-red-700 p-2 flex-shrink-0">&times;</button>
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -95,14 +97,14 @@
                                     </div>
                                     <div class="col-span-6 md:col-span-1"><input type="text" class="point_per_item bg-gray-200 text-center border-gray-300 rounded-md shadow-sm" disabled placeholder="Poin" /></div>
                                     <div class="col-span-6 md:col-span-2"><input type="number" class="price block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Harga"/></div>
-                                    <div class="col-span-6 md:col-span-1"><input type="number" class="quantity block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="1" min="1"/></div>
-                                    <div class="col-span-6 md:col-span-3"><input type="text" class="total_price bg-gray-200 font-semibold border-gray-300 rounded-md shadow-sm" disabled /></div>
+                                    <div class="col-span-6 md:col-span-2"><input type="number" class="quantity block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="1" min="0.01" step="any"/></div>
+                                    <div class="col-span-6 md:col-span-2"><input type="text" class="total_price bg-gray-200 font-semibold border-gray-300 rounded-md shadow-sm" disabled /></div>
                                     <div class="col-span-12 md:col-span-1 flex justify-end">
                                         <button type="button" class="remove-item-btn text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-100">&times;</button>
                                     </div>
                                 </div>
                             </template>
-                            
+
                             <button type="button" id="add-item-btn" class="mt-4 inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                                 Tambah Produk
                             </button>
@@ -143,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const container = document.getElementById('transaction-items-container');
     const template = document.getElementById('transaction-item-template');
     const addItemBtn = document.getElementById('add-item-btn');
-    
+
     let itemIndex = {{ count(old('items', [])) }};
 
     const formatCurrency = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
@@ -151,12 +153,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function addNewItem() {
         const clone = template.content.cloneNode(true);
         const row = clone.querySelector('.transaction-item-row');
-        
+
         const newIndex = itemIndex++;
         row.querySelector('.id_product').name = `items[${newIndex}][id_product]`;
         row.querySelector('.price').name = `items[${newIndex}][price]`;
         row.querySelector('.quantity').name = `items[${newIndex}][quantity]`;
-        
+
         container.appendChild(clone);
     }
 
@@ -175,10 +177,10 @@ document.addEventListener('DOMContentLoaded', function () {
         let totalPoin = 0;
         document.querySelectorAll('.transaction-item-row').forEach(row => {
             const price = parseFloat(row.querySelector('.price').value) || 0;
-            const quantity = parseInt(row.querySelector('.quantity').value) || 0;
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
             const points = parseInt(row.querySelector('.point_per_item').value) || 0;
             const subtotal = price * quantity;
-            
+
             row.querySelector('.total_price').value = formatCurrency(subtotal);
             totalPenjualan += subtotal;
             totalPoin += points * quantity;
@@ -209,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     customerSearch.addEventListener('keyup', async function(e) {
         const query = e.target.value;
-        hiddenCustomerInput.value = ''; 
+        hiddenCustomerInput.value = '';
         customerInfoDisplay.classList.add('hidden');
 
         if (query.length < 3) {
@@ -219,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const response = await fetch(`{{ route('search.customers') }}?q=${query}`);
         const customers = await response.json();
-        
+
         customerSuggestions.innerHTML = '';
         if (customers.length > 0) {
             customers.forEach(cust => {
@@ -230,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     customerSearch.value = cust.no_hp_cust;
                     hiddenCustomerInput.value = cust.no_hp_cust;
                     document.getElementById('alamat').value = cust.alamat || '';
-                    
+
                     customerInfoDisplay.innerHTML = `<div class="p-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">Customer: <strong>${cust.cust_name}</strong></div>`;
                     customerInfoDisplay.classList.remove('hidden');
                     customerSuggestions.classList.add('hidden');
@@ -242,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const createCustomerUrl = `{{ route('customers.create') }}?no_hp_cust=${encodeURIComponent(query)}`;
             customerSuggestions.innerHTML = `
                 <div class="p-2 text-center text-gray-500">
-                    Data Tidak Ada. | 
+                    Data Tidak Ada. |
                     <a href="${createCustomerUrl}" class="text-blue-600 hover:text-blue-800 no-underline font-semibold">
                         + create ${query}
                     </a>
@@ -283,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         suggestionsDiv.classList.remove('hidden');
     });
-    
+
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.relative')) {
             customerSuggestions.classList.add('hidden');
@@ -294,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-    
+
     if (itemIndex === 0) {
         addNewItem();
     } else {

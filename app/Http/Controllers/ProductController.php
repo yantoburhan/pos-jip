@@ -41,7 +41,7 @@ class ProductController extends Controller
         }
 
         // Lakukan paginasi dan jangan lupakan withQueryString()
-        $products = $query->paginate(10)->withQueryString();
+        $products = $query->paginate(10)->withQueryString()->onEachSide(1);
 
         return view('products.index', compact('products'));
     }

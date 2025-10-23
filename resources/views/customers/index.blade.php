@@ -1,7 +1,7 @@
 <x-app-layout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             {{-- Bagian Header Halaman, Pencarian & Tombol Aksi --}}
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 px-4 sm:px-0">
                 <div class="mb-4 sm:mb-0">
@@ -9,7 +9,7 @@
                         {{ __('Manajemen Customer') }}
                     </h2>
                 </div>
-                
+
                 <div class="flex items-center space-x-4 w-full sm:w-auto">
                     {{-- Input Pencarian --}}
                     <div class="w-full sm:w-64">
@@ -89,7 +89,7 @@
                     </table>
                 </div>
             </div>
-            
+
             <div id="pagination-links" class="mt-6">
                 {{ $customers->appends(['q' => request('q')])->links() }}
             </div>

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('no_transaksi');
             $table->foreignId('id_product')->constrained('products')->onDelete('cascade');
-            $table->integer('quantity');
+            $table->float('quantity', 8, 2);
             $table->integer('point_per_item');
             $table->unsignedBigInteger('price');
             $table->unsignedBigInteger('total_price');
